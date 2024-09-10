@@ -1,0 +1,150 @@
+using System;
+using System.Collections.Specialized;
+using System.Configuration;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Web;
+using System.Collections.Generic;
+using APIRPA.bl;
+
+
+namespace APIRPA.core
+{
+    public class Config
+    {
+        public enum EnumEntorno
+        {
+            DESARROLLO,
+            PREPRODUCCION,
+            STAGE,
+            PRODUCCION
+        }
+        public static EnumEntorno Entorno { get; }
+
+        // ! INICIALIZAMOS FIRMAENDPOINT QUE MAS TARDE ACCEDEREMOS DESDE VALUES CONTROLLER CON Config.FirmaEndpoint
+        public static string FirmaEndPoint { get; }
+
+        // CAMBIOS
+        public static DalService.ServicioEnum DBService { get; }
+        public static string DBLogin { get; }
+        public static string DBPassword { get; }
+        public static string DalEndPoint { get; }
+        public static string AuthAppEndPoint { get; }
+        public static bool SeguridadActiva { get; }
+        public static string IDapp { get; }
+
+
+ 
+        static Config()
+        {
+
+            NameValueCollection globalSettings = (NameValueCollection)ConfigurationManager.GetSection("ConfigSettings/GlobalSettings");
+            // globalSettings["forzarEntorno"] = NO
+            Logger.Instance.Log("ForzarEntorno= " + globalSettings["forzarEntorno"].ToString());
+            switch (globalSettings["forzarEntorno"].ToString())
+            {
+                case "DESARROLLO":
+                    Entorno = EnumEntorno.DESARROLLO;
+                    break;
+                case "PREPRODUCCION":
+                    Entorno = EnumEntorno.PREPRODUCCION;
+                    break;
+                case "PRODUCCION":
+                    Entorno = EnumEntorno.PRODUCCION;
+                    break;
+                // Pasará siempre por aquí a no ser que lo cambiemos en el Web.config
+                case "NO":
+                    //Si estamos en local configuramos como desarrollo, si no cogemos la configuración del IIS
+                    Logger.Instance.Log("Request.Url.AbsoluteUri: " + HttpContext.Current.Request.Url.AbsoluteUri);
+                    if (HttpContext.Current.Request.Url.AbsoluteUri.Contains("localhost"))
+                    {
+                        Entorno = EnumEntorno.DESARROLLO;
+                    }
+                    if (HttpContext.Current.Request.Url.AbsoluteUri.Contains("apppre.uned.es"))
+                    {
+                        Entorno = EnumEntorno.PREPRODUCCION;
+                    }
+                    if (HttpContext.Current.Request.Url.AbsoluteUri.Contains("app.uned.es"))
+                    {
+                        Entorno = EnumEntorno.PRODUCCION;
+                    }
+                    //else
+                    //{
+                    //    //Esta variable de entorno se lee del application settings del IIS
+                    //    if (ConfigurationManager.AppSettings["ENTORNO"] == null)
+                    //        Entorno = EnumEntorno.DESARROLLO;
+                    //    else
+                    //    {
+                    //        switch (ConfigurationManager.AppSettings["ENTORNO"].ToString())
+                    //        {
+                    //            case "DESARROLLO":
+                    //                Entorno = EnumEntorno.DESARROLLO;
+                    //                break;
+                    //            case "PREPRODUCCION":
+                    //                Entorno = EnumEntorno.PREPRODUCCION;
+                    //                break;
+                    //            default:
+                    //                Entorno = EnumEntorno.PRODUCCION;
+                    //                break;
+                    //        }
+                    //    }
+                    //}
+                    break;
+                default:
+                    Entorno = EnumEntorno.DESARROLLO;
+                    break;
+            }
+
+            if (HttpContext.Current.Request.Url.AbsoluteUri.Contains("ws.uned.es"))
+            {
+                Entorno = EnumEntorno.PRODUCCION;
+            }
+            Logger.Instance.Log("Entorno asignado: " + Entorno);
+
+            //Entorno = EnumEntorno.PREPRODUCCION;
+            NameValueCollection entornoSettings = new NameValueCollection();
+
+            switch (Entorno)
+            {
+                case EnumEntorno.DESARROLLO:
+                    entornoSettings = (NameValueCollection)ConfigurationManager.GetSection("ConfigSettings/DesarrolloSettings");
+                    break;
+                case EnumEntorno.PREPRODUCCION:
+                    entornoSettings = (NameValueCollection)ConfigurationManager.GetSection("ConfigSettings/PreProduccionSettings");
+                    break;
+                case EnumEntorno.PRODUCCION:
+                    entornoSettings = (NameValueCollection)ConfigurationManager.GetSection("ConfigSettings/ProduccionSettings");
+                    break;
+                default:
+                    entornoSettings = (NameValueCollection)ConfigurationManager.GetSection("ConfigSettings/ProduccionSettings");
+                    break;
+            }
+
+            DBService = (DalService.ServicioEnum)Enum.Parse(typeof(DalService.ServicioEnum), entornoSettings["DBService"].ToString());
+            Logger.Instance.Log("DBService: " +  DBService);
+            DBLogin = entornoSettings["DBLogin"].ToString();
+            Logger.Instance.Log("DBLogin: " + DBLogin);
+
+            DBPassword = entornoSettings["DBPassword"].ToString();
+            Logger.Instance.Log("DBPassword: " + DBPassword);
+
+            DalEndPoint = entornoSettings["DalEndPoint"].ToString();
+            Logger.Instance.Log("DalEndpoint: " + DalEndPoint);
+
+            // IDapp = globalSettings["IDapp"].ToString();
+            FirmaEndPoint = entornoSettings["FirmaEndPoint"].ToString();
+            Logger.Instance.Log("FirmaEndpoint: " + FirmaEndPoint);
+
+
+
+        }
+
+        public static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return true;
+
+        }
+    }
+
+}
+

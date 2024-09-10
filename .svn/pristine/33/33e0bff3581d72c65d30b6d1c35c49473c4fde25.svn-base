@@ -1,0 +1,375 @@
+﻿using APIRPA.core;
+using APIRPA.DalService;
+
+using APIRPA.models;
+using Microsoft.Ajax.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Linq;
+using System.ServiceModel;
+using System.Web;
+
+namespace APIRPA.bl
+{
+    public class dbConnect
+    {
+        // ! PROCEDIMIENTO ALMACENADO QUE CAMBIA LA CONTRASEÑA DEL USER
+        
+        public static string callProc_CAU_CMAIL (string dni)
+        {
+            string result = null;
+            DALSoapClient objC1 = new DALSoapClient();
+            objC1.Endpoint.Address = new EndpointAddress(Config.DalEndPoint);
+            TipoParametroOracle[] arrayparam = new TipoParametroOracle[48];
+            arrayparam[0] = DalHelper.PonerParametros("DNI", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, dni, 10);
+            arrayparam[1] = DalHelper.PonerParametros("APE1", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[2] = DalHelper.PonerParametros("APE2", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[3] = DalHelper.PonerParametros("NOMBRE", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[4] = DalHelper.PonerParametros("VIA", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[5] = DalHelper.PonerParametros("DIRECCION", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[6] = DalHelper.PonerParametros("LOCALIDAD", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[7] = DalHelper.PonerParametros("CPOSTAL", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[8] = DalHelper.PonerParametros("PAIS_RES", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[9] = DalHelper.PonerParametros("PROV_EXT", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[10] = DalHelper.PonerParametros("TLFNO", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[11] = DalHelper.PonerParametros("TLFNO_MOV", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[12] = DalHelper.PonerParametros("EMAIL", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[13] = DalHelper.PonerParametros("SEXO", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[14] = DalHelper.PonerParametros("FEC_NAC", TipoOracle.OracleFechaHora, DalService.ParameterDirection.Output, null, 20);
+            arrayparam[15] = DalHelper.PonerParametros("LOC_NAC", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[16] = DalHelper.PonerParametros("PROV_NAC", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[17] = DalHelper.PonerParametros("PAIS_NAC", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[18] = DalHelper.PonerParametros("LETRA_NIF", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[19] = DalHelper.PonerParametros("COMARCA_CONCEJO", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[20] = DalHelper.PonerParametros("PAIS_NACIONAL", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[21] = DalHelper.PonerParametros("CONFORMIDAD_EMAIL", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[22] = DalHelper.PonerParametros("AÑO_ACC_UNIV", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[23] = DalHelper.PonerParametros("INGRESO_UNIV", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[24] = DalHelper.PonerParametros("ULT_AÑO", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[25] = DalHelper.PonerParametros("CENTRO_SEC", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[26] = DalHelper.PonerParametros("ESTUDIOS_ALUMNO", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[27] = DalHelper.PonerParametros("TRABAJO_ALUMNO", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[28] = DalHelper.PonerParametros("ESTUDIOS_PADRE", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[29] = DalHelper.PonerParametros("TRABAJO_PADRE", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[30] = DalHelper.PonerParametros("ESTUDIOS_MADRE", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[31] = DalHelper.PonerParametros("TRABJO_MADRE", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[32] = DalHelper.PonerParametros("PORCEN_DISCAP", TipoOracle.OracleNumber, DalService.ParameterDirection.Output, null, 10);
+            arrayparam[33] = DalHelper.PonerParametros("DISCAP_F", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[34] = DalHelper.PonerParametros("DISCAP_P", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[35] = DalHelper.PonerParametros("DISCAP_A", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[36] = DalHelper.PonerParametros("DISCAP_V", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[37] = DalHelper.PonerParametros("DIFICULTADES_DISCAP", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[38] = DalHelper.PonerParametros("ORDENADOR_HOGAR", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[39] = DalHelper.PonerParametros("RED_HOGAR", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[40] = DalHelper.PonerParametros("ASCEN_CARGO", TipoOracle.OracleNumber, DalService.ParameterDirection.Output, null, 10);
+            arrayparam[41] = DalHelper.PonerParametros("DESCEN_CARGO", TipoOracle.OracleNumber, DalService.ParameterDirection.Output, null, 10);
+            arrayparam[42] = DalHelper.PonerParametros("PAIS_CENSECUN", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            arrayparam[43] = DalHelper.PonerParametros("LUGAR_TRABAJO", TipoOracle.OracleChar, DalService.ParameterDirection.Output, null, 1);
+            arrayparam[44] = DalHelper.PonerParametros("HORAS_TRABAJO", TipoOracle.OracleNumber, DalService.ParameterDirection.Output, null, 10);
+            arrayparam[45] = DalHelper.PonerParametros("p_salida", TipoOracle.OracleNumber, DalService.ParameterDirection.Output, null, 10);
+            arrayparam[46] = DalHelper.PonerParametros("MENSAJE_SALIDA", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 40);
+            // ! PARAMETROS A CAMBIAR POR LOS RECIBIDOS
+            arrayparam[47] = DalHelper.PonerParametros("p_mailreset", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, null, 40);
+            // ! LLAMAMOS A PROCEDIMIENTO CAU_CMAIL
+            objC1.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.PAC_RPA.CAU_CMAIL", ref arrayparam);
+            objC1.Close();
+            result = "SALIDA: " + Convert.ToString(arrayparam[45]) + ", MENSAJE SALIDA: " + Convert.ToString(arrayparam[46]);
+            
+            return result;
+        }
+        public static string callProc_CAU_CPASS(string p_dni, string p_mailUned, string p_pass, string p_mailExt)
+        {
+            string result = null;
+            try
+            {
+                // INICIALIZACION OBJETO DALSOAPCLIENT
+                DALSoapClient objC1 = new DALSoapClient();
+                Logger.Instance.Log("Objeto DalSoapClient Inicializado");
+                // CONFIGURACION DEL ENDPOINT
+                objC1.Endpoint.Address = new EndpointAddress(Config.DalEndPoint);
+                // INICIALIZACION ARRAY PARÁMETROS ENTRADA/SALIDA
+                TipoParametroOracle[] arrayparam = new TipoParametroOracle[7];
+                // PARÁMETROS DE ENTRADA
+                arrayparam[0] = DalHelper.PonerParametros("p_dni", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_dni, 10);
+                Logger.Instance.Log($"Parametro p_dni: {p_dni} asignado");
+                arrayparam[1] = DalHelper.PonerParametros("p_mailUned", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_mailUned, 30);
+                Logger.Instance.Log($"Parametro p_mailUned {p_mailUned} asignado");
+                arrayparam[2] = DalHelper.PonerParametros("p_pass", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_pass, 30);
+                Logger.Instance.Log($"Parametro p_pass: {p_pass} asignado");
+                arrayparam[3] = DalHelper.PonerParametros("p_mailExt", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_mailExt, 30);
+                Logger.Instance.Log($"Parametro p_mailExt: {p_mailExt} asignado");
+                // PARÁMETROS DE SALIDA
+                arrayparam[4] = DalHelper.PonerParametros("p_errorcode", TipoOracle.OracleNumber, DalService.ParameterDirection.Output);
+                Logger.Instance.Log("Parametro p_errorcode definido como salida");
+                arrayparam[5] = DalHelper.PonerParametros("p_errordes", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 1000);
+                Logger.Instance.Log("Parametro p_errordes definido como salida");
+                arrayparam[6] = DalHelper.PonerParametros("p_result", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 30);
+                
+
+                //objC1.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.PAC_RPA.CAU_CPASS", ref arrayparam);
+                // LLAMADA AL PROCEDIMIENTO ALMACENADO CAU_CPASS DE LA BASE DE DATOS
+                objC1.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.PAC_RPA.CAU_CPASS", ref arrayparam);
+                Console.WriteLine(Convert.ToString(arrayparam[6].Valor));
+                Logger.Instance.Log($"SPex ejecutado. Result = {Convert.ToString(arrayparam[6].Valor)}, Errorcode = {Convert.ToString(arrayparam[4].Valor)}, Errordes = {Convert.ToString(arrayparam[5].Valor)}");
+                                
+                result = Convert.ToString(arrayparam[6].Valor);
+
+                var errordes = Convert.ToString(arrayparam[5].Valor);
+                var errorcode = Convert.ToString(arrayparam[4].Valor);                
+
+                objC1.Close();
+
+                if (result.Equals("1"))
+                {
+                    //ERROR MAILUNED = NULL || DNI = NULL || SOLO SE PUEDE CAMBIAR LA CONTRASE DE INVI / COL
+                    Logger.Instance.Log("RESULT = 1" + "ERRORCODE = " + errorcode + "ERRORDES = " + errordes);
+                    return "1";
+                }
+                else
+                {
+                    if (result.Equals("3"))
+                    {
+                        //ERROR el DNI introducido no está asociado al email uned proporcionado
+                        Logger.Instance.Log("RESULT = 3" + "ERRORCODE = " + errorcode + "ERRORDES = " + errordes);
+                        return "3";
+                    }
+                    else
+                    {
+                        if(result.Equals("2"))
+                        {
+                            //ERROR no se ha podido realizar el cambio de pass || ALGUNA EXCEPCION
+                            Logger.Instance.Log("RESULT = 2" + "ERRORCODE = " + errorcode + "ERRORDES = " + errordes);
+                            return "2";
+                        }
+                        else
+                        {
+                            //SALIDA BUENA
+                            if (result.Equals("0"))
+                            {
+                                // OK
+                                Logger.Instance.Log("RESULT = 0");
+                                return "0";
+                                // SALIDA CORRECTA
+                            }
+                            if (result.Equals("8"))
+                            {
+                                // mientras que no pueda cambiar el resultado en la bbdd, por lo menos llega hasta antes de insertar la traza en la tabla
+                                // MIENTRAS QUE NO PUEDA CAMBIAR EL P_RESULT DE LA BBDD, ESTA ES LA SALIDA CORRECTA, EL 8 SE ASIGNA JUSTO ANTES DE INSERTAR LA TRAZA CUANDO TODO HA IDO BIEN
+                                /////////////////////////////////////////////
+                                Logger.Instance.Log("RESPUESTA BBDD: " + result + "(TODO HA IDO BIEN)");
+                                return "0";
+                            }
+                            else
+                            {
+                                // SALIDA ERRÓNEA
+                                Logger.Instance.Log("RESULT = 2" + "ERRORCODE = " + errorcode + "ERRORDES = " + errordes);
+                                return "2";
+                            }
+                        }
+                    }
+                }                
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Log("Excepcion llamando a BBDD: " + ex.Message);
+                return result; 
+            }
+            
+        }
+
+        public static string callProc_CAU_CMAIL(string p_dni, string p_mail, string p_mailreset)
+        {
+            string result = null;
+            DALSoapClient objC1 = new DALSoapClient();
+            objC1.Endpoint.Address = new EndpointAddress(Config.DalEndPoint);
+            TipoParametroOracle[] arrayparam = new TipoParametroOracle[7];
+
+            arrayparam[0] = DalHelper.PonerParametros("p_dni", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_dni, 10);
+            arrayparam[1] = DalHelper.PonerParametros("p_mail", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_mail, 30);            // ! MAIL UNED
+            arrayparam[2] = DalHelper.PonerParametros("p_pass", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_dni, 10);
+            arrayparam[3] = DalHelper.PonerParametros("p_mailreset", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_mailreset, 30);  // ! MAIL PERSONAL NUEVO
+            arrayparam[4] = DalHelper.PonerParametros("p_errorcode", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, 50);
+            arrayparam[5] = DalHelper.PonerParametros("p_errordes", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 1000);
+            arrayparam[6] = DalHelper.PonerParametros("p_result", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 30);
+
+            //objC1.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.PAC_RPA.PRE_CAU_CMAIL", ref arrayparam);
+            objC1.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.PAC_RPA.PRE_CAU_CMAIL", ref arrayparam);
+            objC1.Close();
+            result = Convert.ToString(arrayparam[6].Valor);
+            if (result != "2")
+            {
+                return result;
+            }
+            else
+            {
+                result = Convert.ToString(arrayparam[5].Valor);
+            }
+            return result;
+        }
+        public static string CambioPassBD(string p_dni, string p_email)
+        {
+            string result = null;
+
+            //TipoParametroOracle[] arrayparam = new TipoParametroOracle[5];
+
+            //arrayparam[0] = DalHelper.PonerParametros("p_dni", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, pClave, 10);
+            //arrayparam[1] = DalHelper.PonerParametros("p_mail", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, pMail, 30);
+            //arrayparam[2] = DalHelper.PonerParametros("p_errorcode", TipoOracle.OracleNumber, DalService.ParameterDirection.Output);
+            //arrayparam[3] = DalHelper.PonerParametros("p_errordes", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 1000);
+            //arrayparam[4] = DalHelper.PonerParametros("p_result", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 1);
+
+            string emailFromDB = null;
+
+            DALSoapClient objC1 = new DALSoapClient();
+            objC1.Endpoint.Address = new EndpointAddress(Config.DalEndPoint);
+            //string esquemaConn = "RPA_PRO";
+            //string paqueteConn = "PAC_RPA";
+            //string procedimientoConn = "CAU_CPASS";
+
+
+            //string bbddCon = esquemaConn + "." + paqueteConn + "." + procedimientoConn;
+            
+
+            TipoParametroOracle[] arrayparam = new TipoParametroOracle[2];
+            arrayparam[0] = DalHelper.PonerParametros("p_dni", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_dni, 30);
+            arrayparam[1] = DalHelper.PonerParametros("p_email", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, p_email, 30);
+
+            try
+            {
+                emailFromDB = objC1.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.PAC_RPA.obtener_email_col", ref arrayparam).ToString();// IN p_dni IN p_email // return varchar2 0 = OK
+                
+                objC1.Close();
+                
+            }            
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+
+            if (emailFromDB == null)
+            {
+
+            }
+            else
+            {
+                // emailFromDB = arrayparam[1].Valor.ToString();
+                TipoParametroOracle[] arrayparam2 = new TipoParametroOracle[3];
+
+                // ! -> PRUEBA PARA ESQUEMA -> "GESTION_CORREO.LOGIN.CAMBIA_PASSWORD_POR_IDEMAIL"
+                arrayparam2[0] = DalHelper.PonerParametros("p_idemail", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, emailFromDB, 30);
+                arrayparam2[1] = DalHelper.PonerParametros("p_passwd", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input,  30);
+                arrayparam2[2] = DalHelper.PonerParametros("ps_err", TipoOracle.OracleNumber, DalService.ParameterDirection.Output, null, 1);
+
+                try
+                {
+                    if (Config.Entorno == Config.EnumEntorno.DESARROLLO)
+                    {
+                        //objC1.RunSPex(DalHelper.MiConnectionString, "GESTION_CORREO.LOGIN.CAMBIA_PASSWORD_POR_IDEMAIL", ref arrayparam); // AÑADE SYSDATE A LA FECHA EL CAMBIO PERO NO NOS INTERESA PORQUE NO LA CAMBIA EL USUARIO  SINO QUE ES UN RESETEO
+
+                        objC1.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.SERVCORREO.CAMBIA_PASSWORD_POR_IDEMAIL", ref arrayparam);// IN p_psswd IN p_idmail // OUT ps_err
+
+                    }
+                    objC1.Close();
+
+                    if (arrayparam[2] == null)
+                    {
+                        result = "La BBDD no ha devuelto ningún tipo de dato";
+                    }
+                    else
+                    {
+                        //result = "OK" + Convert.ToString(arrayparam[4].Valor);
+                        result = "OK" + Convert.ToString(arrayparam[2].Valor);
+                    }
+                }
+                catch (Exception e)
+                {
+                    result = e.Message;
+                }
+
+            }               
+            // x  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////            
+            return result;            
+        }
+        public static string AccesoWS(string pIdAplicacion, string pClave)
+        {
+            string resultado = AccesoWSDAL(pIdAplicacion, pClave);
+            return resultado;
+        }
+        private static string AccesoWSDAL(string pIdAplicacion, string pClave)
+        {
+            string result;
+
+            TipoParametroOracle[] arrayparam = new TipoParametroOracle[4];
+            // ! ERROR EN DALHELPER.CS A LA HORA DE USAR LA FUNCION PONERPARAMETROS( )
+            arrayparam[0] = DalHelper.PonerParametros("p_Dni", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Input, pClave, 20);
+            arrayparam[1] = DalHelper.PonerParametros("p_errorcode", TipoOracle.OracleNumber, DalService.ParameterDirection.Output);
+            arrayparam[2] = DalHelper.PonerParametros("p_errordes", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 1000);
+            arrayparam[3] = DalHelper.PonerParametros("p_result", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 1);
+
+            DALSoapClient objC1 = new DALSoapClient();
+            objC1.Endpoint.Address = new EndpointAddress(Config.DalEndPoint);
+
+            objC1.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.PAC_RPA.SELECT_PRUEBA", ref arrayparam);
+
+            objC1.Close();
+
+            if (arrayparam[3] == null)
+            {
+                //resultadoC1.Cadena = "";
+                result = "";
+            }
+            else
+            {
+                // resultadoC1.Cadena = Convert.ToString(arrayparam[2].Valor);
+                result = Convert.ToString(arrayparam[3].Valor);
+            }
+
+            return result;
+        }
+
+        // ! CONEXION A LA BASE DE DATOS 
+        public static ResulCadena BDConectada()
+        {
+            ResulCadena resultado = BDConectadaDAL();
+            return resultado;
+        }
+        private static ResulCadena BDConectadaDAL()
+        {
+            ResulCadena resultadoC2 = new ResulCadena();
+            try
+            {
+                TipoParametroOracle[] arrayparam = new TipoParametroOracle[1];
+
+                arrayparam[0] = DalHelper.PonerParametros("p_nombrebd", TipoOracle.OracleVarchar2, DalService.ParameterDirection.Output, null, 20);
+
+                DALSoapClient objC2 = new DALSoapClient();
+                objC2.Endpoint.Address = new EndpointAddress(Config.DalEndPoint);
+
+                objC2.RunSPex(DalHelper.MiConnectionString, "RPA_PRO.PAC_RPA.SELECT_PRUEBA", ref arrayparam);
+
+                objC2.Close();
+
+                if (arrayparam[0] == null)
+                    resultadoC2.Cadena = "";
+                else
+                    resultadoC2.Cadena = Convert.ToString(arrayparam[0].Valor);
+
+                resultadoC2.CodError = "0";
+                resultadoC2.DescError = "";
+
+                return resultadoC2;
+
+            }
+            catch (Exception e)
+            {
+                resultadoC2.CodError = "94";
+                resultadoC2.DescError = "Error en proc. BDConectadaDAL:" + e.Message;
+                resultadoC2.Cadena = null;
+                return resultadoC2;
+            }
+
+        }
+
+    }
+}

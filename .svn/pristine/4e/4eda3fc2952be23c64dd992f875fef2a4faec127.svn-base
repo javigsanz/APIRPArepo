@@ -1,0 +1,372 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net;
+using System.Web;
+using Tesseract;
+using System.Text;
+using OpenCvSharp.Internal.Vectors;
+using System.Drawing;
+using Emgu.CV.Structure;
+using Emgu.CV.CvEnum;
+using Emgu.CV.UI;
+using Emgu.CV.Util;
+using Emgu.CV;
+using Emgu.CV.Features2D;
+using System.Runtime.InteropServices;
+using System.Reflection;
+
+namespace APIRPA.bl
+{
+    public class CustomResolver
+    {
+        public static void ResolveDllPath()
+        {
+            string dllPath = "~\\cvextern.dll";
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                string assemblyName = new AssemblyName(args.Name).Name;
+
+                if (assemblyName == "cvextern")
+                {
+                    if (File.Exists(dllPath))
+                    {
+                        return Assembly.LoadFrom(dllPath);
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                return null;
+            };
+        }
+    }
+
+    public class MakeOCR
+    {
+        string ocrFound = "";
+        float ocrConfidence;      
+
+        public float getOCRConfidence (Mat matImageRes)
+        {
+
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "spa.traineddata");
+            string parentDirectory = Directory.GetParent(filePath).FullName + "\\tessdata";
+
+            var xx = matImageRes.ToBitmap();
+            Image imagee = (Image)xx;
+            MemoryStream ms = new MemoryStream();
+            imagee.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+
+            using (var engine = new TesseractEngine(parentDirectory, "spa", EngineMode.Default))
+            {
+                using (var img = Pix.LoadFromMemory(ms.ToArray()))
+                {
+                    using (var page = engine.Process(img))
+                    {
+                        ocrConfidence = page.GetMeanConfidence();
+                        ocrFound = page.GetText();
+
+                    }
+                }
+            }
+            return ocrConfidence;
+        }
+        public string getOCRIterativo(byte[] imageBytes, MemoryStream memoryStream)
+        {
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "spa.traineddata");
+            string parentDirectory = Directory.GetParent(filePath).FullName + "\\tessdata";
+
+            try
+            {
+                // ? PASOS A SEGUIR +/- ESTÁNDAR PARA HACER EL OCR
+                // ? REESCALADO
+                // ? BINARIZACION
+                // ? REDUCCIÓN DE RUIDO
+                // ? DILATION / EROSION
+                // ? ROTATION / DESKEWING
+                // ? BORDERS
+                // ? TRANSPARENCY / ALPHACHANNEL                
+
+                // ! Cargamos la imagen como  variable tipo Image
+                Image image = Image.FromStream(memoryStream);
+                // ! IMAGE A BITMAP
+                Bitmap bmp = new Bitmap(image);
+                // ! BITMAP A MAT
+                var matImage = bmp.ToMat();
+                // ! MAT RESULTADO CAMBIOS
+                Mat matImageRes = new Mat();
+                Mat idim_gray = new Mat();
+                // ! CAMBIO A GRISES
+                CvInvoke.CvtColor(matImage, idim_gray, ColorConversion.Bgr2Gray); // El cambio a gris no se iterará por tanto no lo meto en el bucle
+                // ! THRESHOLD INVERSO
+                CvInvoke.Threshold(idim_gray, matImageRes, 0, 255, ThresholdType.BinaryInv | ThresholdType.Otsu); // ! EL THRESHOLD "CREO" QUE SOLO SE VA A HACER UNA VEZ
+
+                if(getOCRConfidence(matImageRes) < 1)
+                {
+
+                }
+
+                do
+                {
+
+
+                }
+                while (getOCRConfidence(matImageRes) < 1);
+               
+                
+                // ! DILATE
+                Mat kernel = CvInvoke.GetStructuringElement(Emgu.CV.CvEnum.ElementShape.Rectangle, new Size(2, 2), new Point(0, 0));
+                CvInvoke.Dilate(matImageRes, matImageRes, kernel, new Point(), iterations: 1, BorderType.Default, borderValue: new MCvScalar());
+                // ! GAUSSIAN BLUR
+                CvInvoke.GaussianBlur(matImageRes, matImageRes, new Size(7, 7), 0);
+
+                var xx = matImageRes.ToBitmap();
+                Image imagee = (Image)xx;
+                MemoryStream ms = new MemoryStream();
+                imagee.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+
+                using (var engine = new TesseractEngine(parentDirectory, "spa", EngineMode.Default))
+                {
+                    using(var img = Pix.LoadFromMemory(ms.ToArray()))
+                    {
+                        using (var page = engine.Process(img))
+                        {
+                            ocrConfidence = page.GetMeanConfidence();
+                            ocrFound = page.GetText();
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ocrFound = "Ha ocurrido un error durante el Reconocimiento Óptico de Caracteres" + ex;
+            }
+            return ocrFound;
+        }
+
+
+        public string getOCR(byte[] imageBytes, MemoryStream memoryStream)
+        {
+            CustomResolver.ResolveDllPath();
+
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "spa.traineddata");
+            string parentDirectory = Directory.GetParent(filePath).FullName + "\\tessdata";
+            try
+            {
+                // ! Cargamos la imagen como variable tipo Image
+                Image image = Image.FromStream(memoryStream);    
+                // ! IMAGE A BITMAP
+                Bitmap bmp = new Bitmap(image);
+                // ? ---------------
+                // ? ---------------
+                // ? ---------------
+                // ? ---------------
+
+                // ? Bitmap.SetResolution no funciona con un bitmap con imagen, tiene que estar vacío previamente
+                // ? 100% accuray OCR si el size de las mayúsculas esta entre 30 y 33 pixels
+                
+                Mat matResized = new Mat();
+                //Bitmap bmpResized = matResized.ToBitmap();
+                //Bitmap bmpResized = new Bitmap(bmp, new Size(bmp.Width * 2 , bmp.Height * 2));
+                //CvInvoke.Imshow("dd", bmp.ToMat());
+                //CvInvoke.WaitKey(0);
+                //CvInvoke.Imshow("ddd", bmpResized.ToMat());
+                //CvInvoke.WaitKey(0);
+                //bmpResized.SetResolution(500, 500);
+                //var bmpSize = bmpResized.Size;
+
+                // ? ----------------
+                // ? ----------------
+                // ? ----------------
+                // ? ----------------
+                // ! SET RESOLUTION A 300DPI X 300DPI
+                //bmp.SetResolution(600, 600);              
+                // ! BITMAP A MAT
+                var matImage = bmp.ToMat();
+                // ! MAT RESULTADO CAMBIOS
+                //Mat matImageRes = new Mat();
+                Mat matImageRes = matImage;
+                //Mat idim_gray = new Mat();                
+
+                // ! CAMBIO A GRISES
+                //CvInvoke.CvtColor(matImage, idim_gray, ColorConversion.Bgr2Gray);
+                //CvInvoke.Imshow("Idimgray", idim_gray);
+                //CvInvoke.WaitKey(0);
+
+                // ! THRESHOLD INVERSO
+                CvInvoke.Threshold(matImage, matImageRes, 100, 255, ThresholdType.BinaryInv | ThresholdType.Binary);
+                CvInvoke.Imshow("Threshold Inverso", matImageRes);
+                CvInvoke.WaitKey(0);
+
+                CvInvoke.Threshold(matImage, matImageRes, 100, 255, ThresholdType.BinaryInv | ThresholdType.BinaryInv);
+                CvInvoke.Imshow("Threshold Inverso", matImageRes);
+                CvInvoke.WaitKey(0);
+
+
+                // ! GRISES Y THRESHOLD INVERSO = 0.77 CONFIDENCE
+                /*IDESPCFRI164910153850041A<<<<<<
+                                    9805286M2807188ESP <<<<<<<<<<< D */
+
+                // ! GRISES, THRESHOLD INV Y DILATE = 0.57 CONFIDENCE
+                /*IDESPCFR164910153850041A<<<<<<
+                                    AIEYT1:1 AA EN EE LLLLELLLO */
+
+                // ! GRISES, THRESHOLD INV, DILATE Y GAUSSIAN BLUR = 0.45 CONFIDENCE
+                /* IDESPCFR164910153850041A<<<<<<
+                                    EA EYA:1:1 74117 AE7 E CLLLLLLLES*/
+
+                // ! DILATE
+                // ? OK
+                //Mat kernel = CvInvoke.GetStructuringElement(Emgu.CV.CvEnum.ElementShape.Rectangle, new Size(2, 2), new Point(0, 0));
+                //CvInvoke.Dilate(matImageRes, matImageRes, kernel, new Point(), iterations: 1, BorderType.Default, borderValue: new MCvScalar());
+                //CvInvoke.Imshow("DILATE", matImageRes);
+                //CvInvoke.WaitKey(0);
+
+                // ! GAUSSIAN BLUR
+                // ? OK
+                CvInvoke.GaussianBlur(matImageRes, matImageRes, new Size(3, 3), 1);
+                //CvInvoke.Imshow("GAUSSIAN BLURRRR", matImageRes);
+                //CvInvoke.WaitKey(0);
+                //CvInvoke.GaussianBlur(matImageRes, matImageRes, new Size(5, 5), 0); CONSEGUIMOS QUE EL 0 LO DETECTE EN VEZ DE UNA D
+
+                // ! ERODE
+                //Mat kernel = CvInvoke.GetStructuringElement(Emgu.CV.CvEnum.ElementShape.Rectangle, new Size(2, 2), new Point(0, 0));
+                //CvInvoke.Imshow("kernel", kernel);
+                //CvInvoke.WaitKey(0); //
+
+                //CvInvoke.Erode(matImageRes, matImageRes, kernel, new Point(), iterations: 1, BorderType.Default, borderValue: new MCvScalar());
+                //CvInvoke.Imshow("Erode", matImageRes);
+                // ! EL OCR RESULTA BASTANTE CATASTROFICO HACIENDO DILATE
+                //CvInvoke.Dilate(matImageRes, matImageRes, kernel, new Point(), iterations: 1, BorderType.Default, borderValue: new MCvScalar());
+                //CvInvoke.Imshow("Dilate", matImageRes);
+                //CvInvoke.WaitKey(0);
+
+                //VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint();
+                //Mat threshold = new Mat();
+                //Mat hierarchy = new Mat();
+                //Image<Gray, byte> grayImg = matImage.ToImage<Gray, byte>();
+                //CvInvoke.Threshold(grayImg, threshold, 210, 255, ThresholdType.Binary);
+                //CvInvoke.FindContours(threshold, contours, hierarchy, RetrType.Tree, ChainApproxMethod.ChainApproxNone);                
+
+                //CvInvoke.DrawContours(matImage, contours, -1, new MCvScalar(0, 255, 0), 2);
+                //CvInvoke.Imshow("Find contours", matImage);
+
+                //CvInvoke.WaitKey(0);
+                // ? CvInvoke.DestroyAllWindows();
+
+
+                // ! CENTRO DE LA IMAGEN PARA ROTACION
+                //PointF center = new PointF(matImage.Width / 2.0F, matImage.Height / 2.0F);
+
+                //Mat rotationMatrix = new Mat();
+                //CvInvoke.GetRotationMatrix2D(center, 45.0, 1.0, rotationMatrix);
+                //CvInvoke.WarpAffine(matImage, matImageRes, rotationMatrix, matImage.Size);
+                //CvInvoke.CvtColor(matImage, matImageRes, ColorConversion.Bgr2Gray);
+                //CvInvoke.Canny(matImageRes, matImageRes, 10, 600);
+
+                //CvInvoke.Normalize(matImage, matImageRes, 0, 255, NormType.MinMax);
+
+                //CvInvoke.MinAreaRect(matImageRes);                
+                
+                // ! MAT CON GAUSSIAN BLUR
+                //Mat gaussianBlur = new Mat();
+                //Mat sobelX = new Mat();
+                //Mat sobelY = new Mat();
+                //Mat sobelXY = new Mat();
+
+                //matImage.CopyTo(sobelX);
+                //matImage.CopyTo(sobelY);
+                //matImage.CopyTo(sobelXY);
+
+                //CvInvoke.GaussianBlur(matImage, gaussianBlur, new System.Drawing.Size(3, 3), 5.0);
+
+                //CvInvoke.Sobel(gaussianBlur,sobelX, Emgu.CV.CvEnum.DepthType.Default, 1, 0, 5);
+                //CvInvoke.Sobel(gaussianBlur,sobelY, Emgu.CV.CvEnum.DepthType.Default, 0, 1, 5);
+                //CvInvoke.Sobel(gaussianBlur,sobelXY, Emgu.CV.CvEnum.DepthType.Default, 1, 1, 5);
+
+                //CvInvoke.Imshow("sobelx", sobelX);
+                //CvInvoke.Imshow("sobely", sobelY);
+                //CvInvoke.Imshow("sobelxy", sobelXY);
+                //CvInvoke.WaitKey(0);
+
+                // ! CANNY COUNTOUR
+                //Mat cannyPic = new Mat();
+
+                //var average = matImage.ToImage<Gray, byte>().GetAverage();
+                //var lowerthreshold = Math.Max(0, (1.0 - 0.33) * average.Intensity);
+                //var upperthreshold = Math.Max(255, (1.0 + 0.33) * average.Intensity);
+
+                //CvInvoke.Canny(gaussianBlur, cannyPic, lowerthreshold, upperthreshold, 3);
+
+                //CvInvoke.Imshow("canny", cannyPic);
+
+                //CvInvoke.WaitKey(0);
+                
+                //var pic = CvInvoke.Imread(pathh);
+                //Mat pic = new Mat();
+                /////////////////////////////////////                
+
+                //int picHeight = matImage.Rows;
+                //int picWidth = matImage.Cols;
+                //Mat resizedPic = new Mat();
+                // ! CAMBIO DE FORMATO PARA QUE SEA SIEMPRE RECTANGULAR APAISADO
+                // TODO CORREGIR ESTO LO UNICO QUE HACE CROPEAR LA FOTO NO ROTARLA
+                //if (picHeight > picWidth)
+                //{
+                //    var auxWidth = picWidth;
+                //    var auxHeight = picHeight;
+                //    picWidth = auxHeight;
+                //    picHeight = auxWidth;
+                //}
+
+                //Mat imgTrehold = new Mat(); 
+                //CvInvoke.Threshold(matImageRes, matImageRes, 127, 255, ThresholdType.Binary);
+                //CvInvoke.Imshow("threshold", imgTrehold);
+                //CvInvoke.WaitKey(0);
+                // ! SE VE MAS LIMPIO Y CON MÁS NITIDEZ
+                // TODO ---------------------------------------------------------------------------------------- //
+                // TODO REVISAR EL OCR CON LOS CAMBIOS REALIZADOS EN LA IMG
+                // TODO CHECK OLD CONVO W/ CHATGPT
+
+                //CvInvoke.Resize(pic, resizedPic, new System.Drawing.Size(500, 400));                  
+                
+                var xx = matImageRes.ToBitmap();
+                Image imagee = (Image)xx;
+                MemoryStream ms = new MemoryStream();
+                imagee.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+
+                //using (var engine = new TesseractEngine(@"C:\Users\JAVIER GARCIA\Desktop\prueba\tessdata", "spa", EngineMode.Default))
+                string configFile = "--psm 6 -1 mrz";
+                using (var engine = new TesseractEngine(parentDirectory, "spa", EngineMode.Default, configFile))
+                {
+                    //engine.SetVariable("tessedit_pageseg_mode", "6");
+                    //engine.SetVariable("user_defined_dpi", "300");
+                    //using (var img = Pix.LoadFromFile(pathImage))
+                    //using(var img = Pix.LoadFromMemory(ms.ToArray()))
+                    using(var img = Pix.LoadFromMemory(ms.ToArray()))
+                    {
+                        
+                        // ! var x = img.ConvertRGBToGray();
+                        // ! x = x.BinarizeOtsuAdaptiveThreshold()// ! Mejora la lectura de algunos caracteres
+                        using (var page = engine.Process(img))
+                        {
+                            // ! STRING COMPLETA DEL MRZ
+                            var confidence = page.GetMeanConfidence();
+                            ocrFound = page.GetText();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ocrFound = "Ha ocurrido un error durante el Reconocimiento Óptico de Caracteres: \n" + ex;
+            }
+            return ocrFound;
+        }
+    }
+}

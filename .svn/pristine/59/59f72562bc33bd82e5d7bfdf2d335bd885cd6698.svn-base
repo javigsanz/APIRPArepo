@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<discovery xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.xmlsoap.org/disco/">
+  <contractRef ref="https://wsdesa.uned.es/dal/dal.asmx?wsdl" docRef="https://wsdesa.uned.es/dal/dal.asmx" xmlns="http://schemas.xmlsoap.org/disco/scl/" />
+  <soap address="https://wsdesa.uned.es/dal/dal.asmx" xmlns:q1="http://ws.uned.es/dal/" binding="q1:DALSoap" xmlns="http://schemas.xmlsoap.org/disco/soap/" />
+  <soap address="https://wsdesa.uned.es/dal/dal.asmx" xmlns:q2="http://ws.uned.es/dal/" binding="q2:DALSoap12" xmlns="http://schemas.xmlsoap.org/disco/soap/" />
+</discovery>

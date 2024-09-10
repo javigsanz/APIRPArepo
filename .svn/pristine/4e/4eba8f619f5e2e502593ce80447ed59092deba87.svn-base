@@ -1,0 +1,236 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  For more information on how to configure your ASP.NET application, please visit
+  https://go.microsoft.com/fwlink/?LinkId=301879
+  -->
+<configuration>
+  <!--CAMBIOS-->
+  <configSections>
+    <sectionGroup name="ConfigSettings">
+      <section name="GlobalSettings" type="System.Configuration.AppSettingsSection" />
+      <section name="DesarrolloSettings" type="System.Configuration.AppSettingsSection" />
+      <section name="PreProduccionSettings" type="System.Configuration.AppSettingsSection" />
+      <section name="StageSettings" type="System.Configuration.AppSettingsSection" />
+      <section name="ProduccionSettings" type="System.Configuration.AppSettingsSection" />
+    </sectionGroup>
+    <!--<section name="oracle.manageddataaccess.client" type="OracleInternal.Common.ODPMSectionHandler, Oracle.ManagedDataAccess, Version=4.122.21.1, Culture=neutral, PublicKeyToken=89b483f429c47342" /> -->
+    <!-- For more information on Entity Framework configuration, visit http://go.microsoft.com/fwlink/?LinkID=237468 -->
+    <!-- For more information on Entity Framework configuration, visit http://go.microsoft.com/fwlink/?LinkID=237468 -->
+    <section name="entityFramework" type="System.Data.Entity.Internal.ConfigFile.EntityFrameworkSection, EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+    <section name="configBuilders" type="System.Configuration.ConfigurationBuildersSection, System.Configuration, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" restartOnExternalChanges="false" requirePermission="false" />
+    <section name="oracle.manageddataaccess.client" type="OracleInternal.Common.ODPMSectionHandler, Oracle.ManagedDataAccess, Version=4.122.21.1, Culture=neutral, PublicKeyToken=89b483f429c47342" />
+  </configSections>
+  <configBuilders>
+    <builders>
+      <add name="Secrets" userSecretsId="1819326d-f0fb-4229-84bb-2e0b86723c2d" type="Microsoft.Configuration.ConfigurationBuilders.UserSecretsConfigBuilder, Microsoft.Configuration.ConfigurationBuilders.UserSecrets, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    </builders>
+  </configBuilders>
+  <ConfigSettings>
+    <GlobalSettings>
+      <add key="ForzarEntorno" value="NO" />
+      <!-- Valores NO, DESARROLLO, PREPRODUCCION, STAGE, PRODUCCION-->
+      <!-- segundos-->
+      <!-- CAMBIOS METIDOS-->
+      <add key="IDapp" value="146" />
+      <add key="SeguridadActiva" value="True" />
+    </GlobalSettings>
+    <DesarrolloSettings>
+      <!-- <add key="FirmaEndPoint" value="https://wsdesalb.uned.es/eadmon/wsdl/Portafirmas-DESA.wsdl"/> -->
+      <add key="FirmaEndPoint" value="https://wsdesalb.uned.es/eadmon/Portafirmas_SEC_.svc" />
+      <add key="DBService" value="orc5desa" />
+      <add key="DBLogin" value="RPA_WEB" />
+      <add key="DBPassword" value="Vasghn01?." />
+      <add key="DalEndpoint" value="https://wsdesa.uned.es/dal/dal.asmx" />
+      <add key="AuthAppEndPoint" value="https://ssodesa.uned.es/ws/seguridadv2/autorizarApp_SEC_.svc" />
+    </DesarrolloSettings>
+    <PreProduccionSettings>
+      <!-- <add key="FirmaEndPoint" value="https://wsprelb.uned.es/eadmon/wsdl/Portafirmas-PRE.wsdl"/> -->
+      <add key="FirmaEndPoint" value="https://wsprelb.uned.es/eadmon/Portafirmas_SEC_.svc" />
+      <add key="DBService" value="orc5pre" />
+      <add key="DBLogin" value="RPA_WEB" />
+      <add key="DBPassword" value="Vasghn01?." />
+      <add key="DalEndpoint" value="https://wspre.uned.es/dal/dal.asmx" />
+      <add key="AuthAppEndPoint" value="https://ssopre.uned.es/ws/seguridadv2/autorizarApp_SEC_.svc" />
+    </PreProduccionSettings>
+    <StageSettings>
+      <!-- <add key="FirmaEndPoint" value="https://wsstg.uned.es/eadmon/wsdl/Portafirmas-STG.wsdl"/> -->
+      <add key="FirmaEndPoint" value="https://wsstg.uned.es/eadmon/Portafirmas_SEC_.svc" />
+      <!-- EN EL WS DE LA VALIJA NO HAY CONFIGURACIONES DE STAGE (¿¿¿¿NO ESTARÁ MONTADO????)-->
+    </StageSettings>
+    <ProduccionSettings>
+      <!-- <add key="FirmaEndPoint" value="https://ws.uned.es/eadmon/wsdl/Portafirmas.wsdl"/> -->
+      <add key="FirmaEndPoint" value="https://ws.uned.es/eadmon/Portafirmas_SEC_.svc" />
+      <add key="DBService" value="orc5" />
+      <add key="DBLogin" value="RPA_WEB" />
+      <add key="DBPassword" value="Vasghn01?. " />
+      <add key="DalEndpoint" value="https://ws.uned.es/dal/dal.asmx" />
+      <add key="AuthAppEndPoint" value="https://sso.uned.es/ws/seguridadv2/autorizarApp_SEC_.svc" />
+    </ProduccionSettings>
+  </ConfigSettings>
+  <!--CAMBIOS-->
+  <appSettings>
+    <add key="webpages:Version" value="3.0.0.0" />
+    <add key="webpages:Enabled" value="false" />
+    <add key="ClientValidationEnabled" value="true" />
+    <add key="UnobtrusiveJavaScriptEnabled" value="true" />
+  </appSettings>
+  <system.web>
+    <customErrors mode="Off" />
+    <compilation debug="true" targetFramework="4.7.2" />
+    <httpRuntime targetFramework="4.7.2" />
+  </system.web>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="Antlr3.Runtime" publicKeyToken="eb42632606e9261f" />
+        <bindingRedirect oldVersion="0.0.0.0-3.5.0.2" newVersion="3.5.0.2" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Newtonsoft.Json" culture="neutral" publicKeyToken="30ad4fe6b2a6aeed" />
+        <bindingRedirect oldVersion="0.0.0.0-13.0.0.0" newVersion="13.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.Optimization" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="1.0.0.0-1.1.0.0" newVersion="1.1.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="WebGrease" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="0.0.0.0-1.6.5135.21930" newVersion="1.6.5135.21930" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-6.0.0.0" newVersion="6.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.IO.Pipelines" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.0" newVersion="8.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Memory" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-4.0.1.2" newVersion="4.0.1.2" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Text.Encodings.Web" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.0" newVersion="8.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.Helpers" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="1.0.0.0-3.0.0.0" newVersion="3.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.WebPages" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="1.0.0.0-3.0.0.0" newVersion="3.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.Mvc" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="1.0.0.0-5.3.0.0" newVersion="5.3.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Extensions.Primitives" publicKeyToken="adb9793829ddae60" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.0" newVersion="8.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Web.Infrastructure" publicKeyToken="31bf3856ad364e35" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-2.0.0.0" newVersion="2.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Text.Json" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.3" newVersion="8.0.0.3" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Extensions.Options" publicKeyToken="adb9793829ddae60" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.2" newVersion="8.0.0.2" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Emgu.CV" publicKeyToken="7281126722ab4438" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-4.7.0.5276" newVersion="4.7.0.5276" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Drawing.Common" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.0" newVersion="8.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Extensions.DependencyInjection.Abstractions" publicKeyToken="adb9793829ddae60" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.1" newVersion="8.0.0.1" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Extensions.Logging.Abstractions" publicKeyToken="adb9793829ddae60" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.1" newVersion="8.0.0.1" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Diagnostics.DiagnosticSource" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-8.0.0.1" newVersion="8.0.0.1" />
+      </dependentAssembly>
+      <!--<dependentAssembly>
+        <assemblyIdentity name="Emgu.CV.Bitmap" publicKeyToken="7281126722ab4438" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-4.8.1.5350" newVersion="4.8.1.5350" />
+      </dependentAssembly>-->
+    </assemblyBinding>
+  </runtime>
+  <system.serviceModel>
+    <bindings>
+      <basicHttpBinding>
+        <binding name="BasicHttpBinding_IPortafirmas_SEC_DESA" maxBufferPoolSize="2147483647" maxBufferSize="2147483647" maxReceivedMessageSize="2147483647">
+          <security mode="Transport">
+            <transport clientCredentialType="Certificate" />
+          </security>
+        </binding>
+        <binding name="BasicHttpBinding_IPortafirmas_SEC_1" />
+        <binding name="DALSoap" maxReceivedMessageSize="67108864">
+          <security mode="Transport" />
+        </binding>
+        <binding name="DALSoap1" />
+        <binding name="autorizarApp">
+          <security mode="Transport">
+            <transport clientCredentialType="Certificate" />
+          </security>
+        </binding>
+        <binding name="BasicHttpBinding_IPortafirmas_SEC_">
+          <security mode="Transport" />
+        </binding>
+        <binding name="BasicHttpBinding_IPortafirmas_SEC_2" />
+      </basicHttpBinding>
+    </bindings>
+    <client>
+      <endpoint address="https://wsdesalb.uned.es/eadmon/Portafirmas_SEC_.svc" binding="basicHttpBinding" bindingConfiguration="BasicHttpBinding_IPortafirmas_SEC_DESA" contract="MiWSPortafirmas_DESA.IPortafirmas_SEC_" name="BasicHttpBinding_IPortafirmas_SEC_DESA" />
+      <endpoint address="https://wsdesa.uned.es/dal/dal.asmx" binding="basicHttpBinding" bindingConfiguration="DALSoap" contract="DalService.DALSoap" name="DALSoap" />
+      <endpoint address="https://ssodesa.uned.es/ws/seguridadv2/autorizarApp_SEC_.svc" binding="basicHttpBinding" bindingConfiguration="autorizarApp" contract="AuthAppService.IautorizarApp" name="autorizarApp" />
+      <endpoint address="https://wsdesalb.uned.es/eadmon/Portafirmas_SEC_.svc" binding="basicHttpBinding" bindingConfiguration="BasicHttpBinding_IPortafirmas_SEC_" contract="Portafirmas.IPortafirmas_SEC_" name="BasicHttpBinding_IPortafirmas_SEC_" />
+    </client>
+    <behaviors>
+      <serviceBehaviors>
+        <behavior>
+          <!-- Para evitar revelar información de los metadatos, establezca el valor siguiente en false antes de la implementación -->
+          <serviceMetadata httpGetEnabled="true" httpsGetEnabled="true" />
+          <!-- Para recibir detalles de los errores de la excepción para la depuración, establezca el valor siguiente en true. Establézcalo en false antes de la implementación para evitar revelar información de la excepción -->
+          <serviceDebug includeExceptionDetailInFaults="false" />
+        </behavior>
+      </serviceBehaviors>
+    </behaviors>
+  </system.serviceModel>
+  <entityFramework>
+    <providers>
+      <provider invariantName="System.Data.SqlClient" type="System.Data.Entity.SqlServer.SqlProviderServices, EntityFramework.SqlServer" />
+    </providers>
+  </entityFramework>
+  <system.webServer>
+    <handlers>
+      <remove name="ExtensionlessUrlHandler-Integrated-4.0" />
+      <remove name="OPTIONSVerbHandler" />
+      <remove name="TRACEVerbHandler" />
+      <add name="ExtensionlessUrlHandler-Integrated-4.0" path="*." verb="*" type="System.Web.Handlers.TransferRequestHandler" preCondition="integratedMode,runtimeVersionv4.0" />
+    </handlers>
+  </system.webServer>
+  <system.codedom>
+    <compilers>
+      <compiler language="c#;cs;csharp" extension=".cs" warningLevel="4" compilerOptions="/langversion:default /nowarn:1659;1699;1701;612;618" type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=4.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+      <compiler language="vb;vbs;visualbasic;vbscript" extension=".vb" warningLevel="4" compilerOptions="/langversion:default /nowarn:41008,40000,40008 /define:_MYTYPE=\&quot;Web\&quot; /optionInfer+" type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.VBCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=4.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    </compilers>
+  </system.codedom>
+  <system.data>
+    <DbProviderFactories>
+      <remove invariant="Oracle.ManagedDataAccess.Client" />
+      <add name="ODP.NET, Managed Driver" invariant="Oracle.ManagedDataAccess.Client" description="Oracle Data Provider for .NET, Managed Driver" type="Oracle.ManagedDataAccess.Client.OracleClientFactory, Oracle.ManagedDataAccess, Version=4.122.21.1, Culture=neutral, PublicKeyToken=89b483f429c47342" />
+    </DbProviderFactories>
+  </system.data>
+</configuration>

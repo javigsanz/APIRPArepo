@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsx="http://schemas.xmlsoap.org/ws/2004/09/mex" xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="http://tempuri.org/" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" name="Portafirmas_SEC_" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <xs:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:import namespace="http://schemas.datacontract.org/2004/07/eadmon.DTO" />
+      <xs:import namespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+      <xs:element name="createRequest">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element minOccurs="0" name="subject" nillable="true" type="xs:string" />
+            <xs:element minOccurs="0" name="text" nillable="true" type="xs:string" />
+            <xs:element minOccurs="0" name="reference" nillable="true" type="xs:string" />
+            <xs:element xmlns:q1="http://schemas.datacontract.org/2004/07/eadmon.DTO" minOccurs="0" name="tipoFirma" type="q1:tipoFirma" />
+            <xs:element xmlns:q2="http://schemas.microsoft.com/2003/10/Serialization/Arrays" minOccurs="0" name="signers" nillable="true" type="q2:ArrayOfstring" />
+            <xs:element xmlns:q3="http://schemas.datacontract.org/2004/07/eadmon.DTO" minOccurs="0" name="documents" nillable="true" type="q3:ArrayOfdocument" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="createRequestResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element xmlns:q4="http://schemas.datacontract.org/2004/07/eadmon.DTO" minOccurs="0" name="createRequestResult" nillable="true" type="q4:Portafirmas_Modify_DTO" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="requestState">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element minOccurs="0" name="requestId" nillable="true" type="xs:string" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="requestStateResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element xmlns:q5="http://schemas.datacontract.org/2004/07/eadmon.DTO" minOccurs="0" name="requestStateResult" nillable="true" type="q5:Portafirmas_Query_DTO" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="docList">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element minOccurs="0" name="requestId" nillable="true" type="xs:string" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="docListResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element xmlns:q6="http://schemas.datacontract.org/2004/07/eadmon.DTO" minOccurs="0" name="docListResult" nillable="true" type="q6:Portafirmas_Query_DTO" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="downloadDocument">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element minOccurs="0" name="documentId" nillable="true" type="xs:string" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="downloadDocumentResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element xmlns:q7="http://schemas.datacontract.org/2004/07/eadmon.DTO" minOccurs="0" name="downloadDocumentResult" nillable="true" type="q7:document" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="downloadSignDocument">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element minOccurs="0" name="documentId" nillable="true" type="xs:string" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="downloadSignDocumentResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element xmlns:q8="http://schemas.datacontract.org/2004/07/eadmon.DTO" minOccurs="0" name="downloadSignDocumentResult" nillable="true" type="q8:document" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:schema>
+    <xs:schema xmlns:tns="http://schemas.microsoft.com/2003/10/Serialization/" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/2003/10/Serialization/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="anyType" nillable="true" type="xs:anyType" />
+      <xs:element name="anyURI" nillable="true" type="xs:anyURI" />
+      <xs:element name="base64Binary" nillable="true" type="xs:base64Binary" />
+      <xs:element name="boolean" nillable="true" type="xs:boolean" />
+      <xs:element name="byte" nillable="true" type="xs:byte" />
+      <xs:element name="dateTime" nillable="true" type="xs:dateTime" />
+      <xs:element name="decimal" nillable="true" type="xs:decimal" />
+      <xs:element name="double" nillable="true" type="xs:double" />
+      <xs:element name="float" nillable="true" type="xs:float" />
+      <xs:element name="int" nillable="true" type="xs:int" />
+      <xs:element name="long" nillable="true" type="xs:long" />
+      <xs:element name="QName" nillable="true" type="xs:QName" />
+      <xs:element name="short" nillable="true" type="xs:short" />
+      <xs:element name="string" nillable="true" type="xs:string" />
+      <xs:element name="unsignedByte" nillable="true" type="xs:unsignedByte" />
+      <xs:element name="unsignedInt" nillable="true" type="xs:unsignedInt" />
+      <xs:element name="unsignedLong" nillable="true" type="xs:unsignedLong" />
+      <xs:element name="unsignedShort" nillable="true" type="xs:unsignedShort" />
+      <xs:element name="char" nillable="true" type="tns:char" />
+      <xs:simpleType name="char">
+        <xs:restriction base="xs:int" />
+      </xs:simpleType>
+      <xs:element name="duration" nillable="true" type="tns:duration" />
+      <xs:simpleType name="duration">
+        <xs:restriction base="xs:duration">
+          <xs:pattern value="\-?P(\d*D)?(T(\d*H)?(\d*M)?(\d*(\.\d*)?S)?)?" />
+          <xs:minInclusive value="-P10675199DT2H48M5.4775808S" />
+          <xs:maxInclusive value="P10675199DT2H48M5.4775807S" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:element name="guid" nillable="true" type="tns:guid" />
+      <xs:simpleType name="guid">
+        <xs:restriction base="xs:string">
+          <xs:pattern value="[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:attribute name="FactoryType" type="xs:QName" />
+      <xs:attribute name="Id" type="xs:ID" />
+      <xs:attribute name="Ref" type="xs:IDREF" />
+    </xs:schema>
+    <xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/eadmon.DTO" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/eadmon.DTO" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:simpleType name="tipoFirma">
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="Cascada" />
+          <xs:enumeration value="Paralela" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:element name="tipoFirma" nillable="true" type="tns:tipoFirma" />
+      <xs:complexType name="ArrayOfdocument">
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="document" nillable="true" type="tns:document" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="ArrayOfdocument" nillable="true" type="tns:ArrayOfdocument" />
+      <xs:complexType name="document">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="b64" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="identifier" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="mime" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="name" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="sign" nillable="true" type="xs:string" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="document" nillable="true" type="tns:document" />
+      <xs:complexType name="Portafirmas_Modify_DTO">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="createdRequestId" nillable="true" type="xs:string" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="Portafirmas_Modify_DTO" nillable="true" type="tns:Portafirmas_Modify_DTO" />
+      <xs:complexType name="Portafirmas_Query_DTO">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="documentList" nillable="true" type="tns:ArrayOfdocumentList" />
+          <xs:element minOccurs="0" name="requestStatus" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="signersList" nillable="true" type="tns:ArrayOfsigner" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="Portafirmas_Query_DTO" nillable="true" type="tns:Portafirmas_Query_DTO" />
+      <xs:complexType name="ArrayOfdocumentList">
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="documentList" nillable="true" type="tns:documentList" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="ArrayOfdocumentList" nillable="true" type="tns:ArrayOfdocumentList" />
+      <xs:complexType name="documentList">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="document" nillable="true" type="tns:document" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="documentList" nillable="true" type="tns:documentList" />
+      <xs:complexType name="ArrayOfsigner">
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="signer" nillable="true" type="tns:signer" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="ArrayOfsigner" nillable="true" type="tns:ArrayOfsigner" />
+      <xs:complexType name="signer">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="name" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="signState" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="signStateDate" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="surname1" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="surname2" nillable="true" type="xs:string" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="signer" nillable="true" type="tns:signer" />
+    </xs:schema>
+    <xs:schema xmlns:tns="http://schemas.microsoft.com/2003/10/Serialization/Arrays" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:complexType name="ArrayOfstring">
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="xs:string" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="ArrayOfstring" nillable="true" type="tns:ArrayOfstring" />
+    </xs:schema>
+    <xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/eadmon" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/eadmon" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:complexType name="ErroresEadmon">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="Codigo" nillable="true" type="xs:string" />
+          <xs:element minOccurs="0" name="Mensaje" nillable="true" type="xs:string" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="ErroresEadmon" nillable="true" type="tns:ErroresEadmon" />
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="IPortafirmas_SEC__createRequest_InputMessage">
+    <wsdl:part name="parameters" element="tns:createRequest" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__createRequest_OutputMessage">
+    <wsdl:part name="parameters" element="tns:createRequestResponse" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__createRequest_ErroresEadmonFault_FaultMessage">
+    <wsdl:part xmlns:q1="http://schemas.datacontract.org/2004/07/eadmon" name="detail" element="q1:ErroresEadmon" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__requestState_InputMessage">
+    <wsdl:part name="parameters" element="tns:requestState" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__requestState_OutputMessage">
+    <wsdl:part name="parameters" element="tns:requestStateResponse" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__requestState_ErroresEadmonFault_FaultMessage">
+    <wsdl:part xmlns:q2="http://schemas.datacontract.org/2004/07/eadmon" name="detail" element="q2:ErroresEadmon" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__docList_InputMessage">
+    <wsdl:part name="parameters" element="tns:docList" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__docList_OutputMessage">
+    <wsdl:part name="parameters" element="tns:docListResponse" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__docList_ErroresEadmonFault_FaultMessage">
+    <wsdl:part xmlns:q3="http://schemas.datacontract.org/2004/07/eadmon" name="detail" element="q3:ErroresEadmon" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__downloadDocument_InputMessage">
+    <wsdl:part name="parameters" element="tns:downloadDocument" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__downloadDocument_OutputMessage">
+    <wsdl:part name="parameters" element="tns:downloadDocumentResponse" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__downloadDocument_ErroresEadmonFault_FaultMessage">
+    <wsdl:part xmlns:q4="http://schemas.datacontract.org/2004/07/eadmon" name="detail" element="q4:ErroresEadmon" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__downloadSignDocument_InputMessage">
+    <wsdl:part name="parameters" element="tns:downloadSignDocument" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__downloadSignDocument_OutputMessage">
+    <wsdl:part name="parameters" element="tns:downloadSignDocumentResponse" />
+  </wsdl:message>
+  <wsdl:message name="IPortafirmas_SEC__downloadSignDocument_ErroresEadmonFault_FaultMessage">
+    <wsdl:part xmlns:q5="http://schemas.datacontract.org/2004/07/eadmon" name="detail" element="q5:ErroresEadmon" />
+  </wsdl:message>
+  <wsdl:portType name="IPortafirmas_SEC_">
+    <wsdl:operation name="createRequest">
+      <wsdl:input wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/createRequest" message="tns:IPortafirmas_SEC__createRequest_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/createRequestResponse" message="tns:IPortafirmas_SEC__createRequest_OutputMessage" />
+      <wsdl:fault wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/createRequestErroresEadmonFault" name="ErroresEadmonFault" message="tns:IPortafirmas_SEC__createRequest_ErroresEadmonFault_FaultMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="requestState">
+      <wsdl:input wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/requestState" message="tns:IPortafirmas_SEC__requestState_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/requestStateResponse" message="tns:IPortafirmas_SEC__requestState_OutputMessage" />
+      <wsdl:fault wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/requestStateErroresEadmonFault" name="ErroresEadmonFault" message="tns:IPortafirmas_SEC__requestState_ErroresEadmonFault_FaultMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="docList">
+      <wsdl:input wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/docList" message="tns:IPortafirmas_SEC__docList_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/docListResponse" message="tns:IPortafirmas_SEC__docList_OutputMessage" />
+      <wsdl:fault wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/docListErroresEadmonFault" name="ErroresEadmonFault" message="tns:IPortafirmas_SEC__docList_ErroresEadmonFault_FaultMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="downloadDocument">
+      <wsdl:input wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/downloadDocument" message="tns:IPortafirmas_SEC__downloadDocument_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/downloadDocumentResponse" message="tns:IPortafirmas_SEC__downloadDocument_OutputMessage" />
+      <wsdl:fault wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/downloadDocumentErroresEadmonFault" name="ErroresEadmonFault" message="tns:IPortafirmas_SEC__downloadDocument_ErroresEadmonFault_FaultMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="downloadSignDocument">
+      <wsdl:input wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/downloadSignDocument" message="tns:IPortafirmas_SEC__downloadSignDocument_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/downloadSignDocumentResponse" message="tns:IPortafirmas_SEC__downloadSignDocument_OutputMessage" />
+      <wsdl:fault wsaw:Action="http://tempuri.org/IPortafirmas_SEC_/downloadSignDocumentErroresEadmonFault" name="ErroresEadmonFault" message="tns:IPortafirmas_SEC__downloadSignDocument_ErroresEadmonFault_FaultMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="BasicHttpBinding_IPortafirmas_SEC_" type="tns:IPortafirmas_SEC_">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="createRequest">
+      <soap:operation soapAction="http://tempuri.org/IPortafirmas_SEC_/createRequest" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="ErroresEadmonFault">
+        <soap:fault use="literal" name="ErroresEadmonFault" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="requestState">
+      <soap:operation soapAction="http://tempuri.org/IPortafirmas_SEC_/requestState" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="ErroresEadmonFault">
+        <soap:fault use="literal" name="ErroresEadmonFault" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="docList">
+      <soap:operation soapAction="http://tempuri.org/IPortafirmas_SEC_/docList" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="ErroresEadmonFault">
+        <soap:fault use="literal" name="ErroresEadmonFault" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="downloadDocument">
+      <soap:operation soapAction="http://tempuri.org/IPortafirmas_SEC_/downloadDocument" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="ErroresEadmonFault">
+        <soap:fault use="literal" name="ErroresEadmonFault" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="downloadSignDocument">
+      <soap:operation soapAction="http://tempuri.org/IPortafirmas_SEC_/downloadSignDocument" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="ErroresEadmonFault">
+        <soap:fault use="literal" name="ErroresEadmonFault" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Portafirmas_SEC_">
+    <wsdl:port name="BasicHttpBinding_IPortafirmas_SEC_" binding="tns:BasicHttpBinding_IPortafirmas_SEC_">
+      <soap:address location="https://wsdesalb.uned.es/eadmon/Portafirmas_SEC_.svc" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

@@ -1,0 +1,29 @@
+﻿.lista-sinestilo {
+    list-style-type: none;
+}
+
+.fondo-gris {
+    background-color: #e8e8e8;
+}
+
+.fondo-morado {
+    background-color: #dbc5db;
+}
+
+.panel-heading {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+}
+
+.login legend {
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    margin-bottom: 0px;
+    font-size: 16px;
+    line-height: inherit;
+    color: #333;
+    border: 0;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid#e5e5e5;
+}

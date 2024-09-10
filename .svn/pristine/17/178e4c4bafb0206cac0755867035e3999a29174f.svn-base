@@ -1,0 +1,102 @@
+﻿using APIRPA.models;
+using Microsoft.Ajax.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
+using System.Web;
+using System.Web.UI.WebControls;
+using System.Web.WebPages;
+using Tesseract;
+
+namespace APIRPA.bl
+{
+    public class mrzDetector
+
+    {
+        public string getMrzArray(string ocrFound)
+        {
+            MrzModelo mrzCreated = new MrzModelo();
+
+            if (ocrFound.IsNullOrWhiteSpace())
+            {
+                return null;
+            }
+            else
+            {
+                string[] splitMrz = ocrFound.Split('\n');
+                // ! CONVERTIMOS EL ARRAY 
+                List<string> list = new List<string>(splitMrz);
+
+                // ! SEGUNDA LINEA MRZ
+                string linea1Mrz = "";
+                // ! PRIEMERA LINEA MRZ
+                string linea2Mrz = "";
+                // ! ELIMINAMOS LOS ELEMENTOS ""
+                splitMrz = splitMrz.Where(s => s != string.Empty).ToArray();
+                // ! ELIMINAMOS LOS ELEMENTOS " "
+                splitMrz = splitMrz.Where(s => s != " ").ToArray(); 
+                
+                linea1Mrz = splitMrz[splitMrz.Length - 3];
+                linea2Mrz = splitMrz[splitMrz.Length - 2];
+                string lineasMrzConcat = linea1Mrz + "*" + linea2Mrz;
+
+                
+
+                return lineasMrzConcat;
+            }
+        }
+
+        public bool getMrzAndVerify(string ocrFound)
+        {
+            MrzModelo mrzCreated = new MrzModelo();
+            var digitosControl = new DigitosControl();
+
+
+            if (ocrFound != null)
+            {
+                string[] splitMrz = ocrFound.Split('*');
+                int splitMrzLenght = splitMrz.Length;
+
+                string linea1Mrz = splitMrz[0];
+                string linea2Mrz = splitMrz[1];
+                // ! ASIGNACIONES CAMPOS DE LINEA2MRZ
+                mrzCreated.fechaNacimiento = String.Concat(linea2Mrz[0], linea2Mrz[1], linea2Mrz[2], linea2Mrz[3], linea2Mrz[4], linea2Mrz[5]);
+                mrzCreated.fechaNacFormateada = String.Concat(linea2Mrz[4], linea2Mrz[5], linea2Mrz[2], linea2Mrz[3], linea2Mrz[0], linea2Mrz[1]);
+                mrzCreated.digitoControl2 = linea2Mrz[6].ToString();
+                mrzCreated.sexo = linea2Mrz[7].ToString();
+                mrzCreated.fechaCaducidad = String.Concat(linea2Mrz[8], linea2Mrz[9], linea2Mrz[10], linea2Mrz[11], linea2Mrz[12], linea2Mrz[13]);
+                mrzCreated.fechaCadFormateada = String.Concat(linea2Mrz[12], linea2Mrz[13], linea2Mrz[10], linea2Mrz[11], linea2Mrz[8], linea2Mrz[9]);
+                mrzCreated.digitoControl3 = linea2Mrz[14].ToString();
+                mrzCreated.nacionalidad = String.Concat(linea2Mrz[15], linea2Mrz[16], linea2Mrz[17]);
+                mrzCreated.digitoControl4 = linea2Mrz[linea2Mrz.Length-1].ToString();
+                // ! ASIGNACIONS CAMPOS DE LINEA1MRZ
+                mrzCreated.tipoDocumento = String.Concat(linea1Mrz[0], linea1Mrz[1]);
+                mrzCreated.paisEmisor =String.Concat(linea1Mrz[2], linea1Mrz[3], linea1Mrz[4]);
+                mrzCreated.nSerieSopFisico =
+                    String.Concat(linea1Mrz[5], linea1Mrz[6], linea1Mrz[7], linea1Mrz[8], linea1Mrz[9], linea1Mrz[10], linea1Mrz[11], linea1Mrz[12], linea1Mrz[13]);
+                mrzCreated.digitoControl1 = linea1Mrz[14].ToString();
+                mrzCreated.numeroDni =
+                    String.Concat(linea1Mrz[15], linea1Mrz[16], linea1Mrz[17], linea1Mrz[18], linea1Mrz[19], linea1Mrz[20], linea1Mrz[21], linea1Mrz[22], linea1Mrz[23]);                           
+                var controlados = digitosControl.isControled(mrzCreated);
+                if(controlados)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+                   
+                             
+            }
+            else
+            {
+                return false;
+            }
+            
+
+        }
+    }
+}

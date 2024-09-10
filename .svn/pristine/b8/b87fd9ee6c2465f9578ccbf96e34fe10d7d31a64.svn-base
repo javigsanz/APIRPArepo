@@ -1,0 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Data.Entity;
+using System.Security.Cryptography;
+using System.ComponentModel.DataAnnotations;
+using System.Timers;
+using System.Text.RegularExpressions;
+using System.Web.Mvc;
+using System.ComponentModel;
+using Microsoft.AspNetCore.Http;
+using APIRPA.Utility;
+
+namespace APIRPA.models
+{
+    public class FormularioPassModel 
+    {
+        [DisplayName("Nombre Completo del Solicitante")]
+        [Required (ErrorMessage = "El Nombre del Solicitante es necesario") ]
+        [StringLength(30, ErrorMessage = "El Nombre del Solicitante no puede superar los 100 caracteres")]
+        public string nombreCompletoSolicitante {  get; set; }
+
+        //[DisplayName("Identificador de Usuario de la UNED")]
+        //[Required (ErrorMessage = "El Identificador de Usuario de la UNED es necesario") ]
+        //[StringLength (8, ErrorMessage = "EL identificador no puede exceder los 8 caracteres")]
+        //[AllowedIdUned] // ! EXPRESIONES REGULARES PARA EL FORMATO DEL ID INVI / COL
+        //public string idUserUned {  get; set; }
+        
+        [DisplayName("Número del DNI/NIE del solicitante")]
+        [Required(ErrorMessage = "El Número de DNI del Usuario es necesario")]
+        [AllowedDniNie] // ! EXPRESIONES REGULARES PARA EL FORMATO DEL DNI / NIE
+        public string nDniSolicitante { get; set; }
+
+        [DisplayName("Dirección de Email UNED del Solicitante")]
+        [Required(ErrorMessage = "La dirección de Email de la Uned es necesaria")]
+        [AllowEmailUned] // ! SI CONTIENE invi.uned.es / col.uned.es
+        public string emailUnedSolicitante { get; set; }
+
+        [DisplayName("Dirección de email EXTERNA para recuperar la contraseña")]
+        [Required(ErrorMessage = "La dirección de Email personal es necesaria")]
+        [DataType(DataType.EmailAddress)] // ! SOLO SI ES UN STRING CON FIORMATO DE EMAIL
+        public string emailPersSolicitante { get; set; }
+
+        [DisplayName("Imagen reverso del DNI (Opcional)")] // ! OPCIONAL  YA QUE NO ESTAMOS USANDO ACTUALMENTE EL PROCESO DE OCR
+        //[Required(ErrorMessage = "Es obligatorio adjuntar la imagen solicitada")]
+        public HttpPostedFileBase bytesReversoDni { get; set; }
+
+        [DisplayName("1ª Línea MRZ")]
+        [Required(ErrorMessage = "OBLIGATORIO")]
+        [MinLength(30, ErrorMessage = "Faltan caracteres, la linea consta de 30 caracteres, por favor introduzca cuidadosamente cada uno de ellos")]
+        [MaxLength(30, ErrorMessage = "Sobran caracteres, la linea consta de 30 caracteres, por favor introduzca cuidadosamente cada uno de ellos")]
+        public string Linea1Mrz { get; set; }
+
+        [DisplayName("2ª Línea MRZ")]
+        [Required(ErrorMessage = "OBLIGATORIO")]
+        [MinLength(30, ErrorMessage = "Faltan caracteres, la linea consta de 30 caracteres, por favor introduzca cuidadosamente cada uno de ellos")]
+        [MaxLength(30, ErrorMessage = "Sobran caracteres, la linea consta de 30 caracteres, por favor introduzca cuidadosamente cada uno de ellos")]
+        public string Linea2Mrz { get; set; }
+
+        
+        public byte[] arrayBytesDni { get; set; }
+
+        public string errorOCR { get; set; }
+
+        public string errorCallCambioPassBD { get; set; }
+    }    
+}

@@ -1,0 +1,818 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
+using System.Web;
+using System.Web.Http;
+using System.IO;
+using System.ServiceModel;
+using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Ajax.Utilities;
+using System.Web.Http.Controllers;
+using System.Data.SqlTypes;
+using System.Web.UI.WebControls;
+using System.Text;
+using APIRPA.core;
+using APIRPA.models;
+using APIRPA.DalService;
+using System.Drawing.Text;
+using System.Data.OracleClient;
+using Oracle.ManagedDataAccess.Client;
+using System.Text.RegularExpressions;
+using Tesseract;
+using System.Web.WebPages;
+using APIRPA.bl;
+using Newtonsoft.Json;
+using System.Data.SqlClient;
+using System.Data;
+using System.Web.ModelBinding;
+
+namespace APIRPA.Controllers
+{
+    public class ValuesController : ApiController
+    {
+        // ! PROCESO PARA EL CAMBIO DE EMAIL PERSONAL DEL ALUMNO
+        public HttpResponseMessage cambioMailBD([FromBody]MailModelo entradaDNI, string cambioMail)
+        {
+            byte[] imageBytes = entradaDNI.bytesDNI;
+            string dniSolicitante = entradaDNI.dniSolicitante;
+            string ocrFound;
+            MrzModelo mrzCreated = new MrzModelo();
+            bool mrzIsOk = false;
+            var reseteoPassword = new reseteoPassword();
+            HttpResponseMessage response = new HttpResponseMessage();
+
+            if (cambioMail == "1")
+            {
+                try
+                {
+                    //File.WriteAllBytes(dniFilePath, imageBytes);    // ! ALMACENAMIENTO LOCAL USADO PREVIAMENTE
+                    MemoryStream memoryStream = new MemoryStream(imageBytes);
+                    var makeOCR = new MakeOCR();
+                    ocrFound = makeOCR.getOCR(imageBytes, memoryStream);
+                    
+                    if (ocrFound.IsNullOrWhiteSpace() || ocrFound == "" || ocrFound.Contains("Error"))
+                    {
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                        response.Content = new StringContent("ERROR AL REALIZAR EL OCR DE LA IMAGEN DEL DNI");
+                    }
+                    else // ! OCRFOUND EXISTS
+                    {
+                        var mrzDetector = new mrzDetector();
+                        //mrzCreated = mrzDetector.getMrzAndVerify(ocrFound);
+                        mrzIsOk = mrzDetector.getMrzAndVerify(ocrFound);
+                        var digitosControl = new DigitosControl();
+                        var mrzIsControled = digitosControl.isControled(mrzCreated);
+
+                        if (mrzCreated != null)
+                        {
+                            var calculoLetraDni = new calculoLetraDni();
+                            bool letraOk = false;
+                            string dni1 = mrzCreated.numeroDni.Remove(mrzCreated.numeroDni.Length-1, 1);
+                            string dni2 = entradaDNI.dniSolicitante.Remove(entradaDNI.dniSolicitante.Length-2, 2);
+                            // ! COMPROBACIÓN  NUM DNI PROPORCIONADO ==  AL NUM DE LA IMG DEL DNI
+                            if (dni1 == dni2)
+                            {
+                                letraOk = calculoLetraDni.CalculoLetraDni(mrzCreated.numeroDni);
+                            }
+                            DateTime dateTimeNow = DateTime.Now;
+                            DateTime dateTimeForm = DateTime.Parse(mrzCreated.fechaCaducidad);
+                            bool DniCadOk = false;
+                            // ! COMPROBACIÓN DNI NO CADUCADO
+                            if (DateTime.Compare(dateTimeNow, dateTimeForm) < 0)
+                            {
+                                // ! COMPARE < 0 , NO CADUCADO
+                                DniCadOk = true;
+                            }
+                            else
+                            {
+                                // ! COMPARE >= 0, CADUCA HOY / YA CADUCADO
+                                DniCadOk = false;
+                            }
+
+                            if (letraOk && DniCadOk) // ! CONFIRMAMOS QUE EL NIF ES CORRECTO MEDIANTE EL CONTROL DE LA LETRA DEL NIF
+                            {
+                                // ! varNewPass = reseteoPassword.genPass();
+                                // ! FORMATEO DEL NUMERO DEL DNI
+                                //string numAux = mrzCreated.numeroDni.Substring(0, Math.Min(entradaDNI.dniSolicitante.Length, 8));
+                                //string letraAux = mrzCreated.numeroDni.Substring(8);
+                                //entradaDNI.dniSolicitante = numAux + "-" + letraAux;
+
+                                string p_dni = entradaDNI.dniSolicitante;
+                                string p_pass = entradaDNI.passSolicitante;
+                                string p_mail = entradaDNI.emailSolicitante;
+                                string p_mailreset = entradaDNI.mailNuevo;
+
+                                // ! LLAMADA BBDD PROC. ALMACENADO
+                                var bdResponse = dbConnect.callProc_CAU_CMAIL(p_dni, p_mail, p_mailreset);
+                                if (bdResponse == null)
+                                {
+                                    response.StatusCode = HttpStatusCode.BadRequest;
+                                    response.Content = new StringContent("NO HA HABIDO RESPUESTA POR PARTE DE LA BBDD");
+                                }
+                                else
+                                {
+                                    switch (bdResponse)
+                                    {
+                                        case "0":
+                                            response.StatusCode = HttpStatusCode.OK;
+                                            response.Content = new StringContent("CORREO COINCIDE Y LA CONTRASEÑA HA SIDO CAMBIADA");
+                                            break;
+                                        case "1":
+                                            response.StatusCode = HttpStatusCode.NotFound;
+                                            response.Content = new StringContent("LA CUENTA NO ES INVI NI COL");
+                                            break;
+                                        case "2":
+                                            response.StatusCode = HttpStatusCode.InternalServerError;
+                                            response.Content = new StringContent(bdResponse.ToString());
+                                            break;
+                                        case "3":
+                                            response.StatusCode = HttpStatusCode.NotFound;
+                                            response.Content = new StringContent("EL MAIL NO CORRESPONDE AL MAIL DE LA BBDD PARA ESE DNI");
+                                            break;
+                                        case "4":
+                                            response.StatusCode = HttpStatusCode.NoContent;
+                                            response.Content = new StringContent("NO HAY DATOS PARA ESE DNI");
+                                            break;
+                                    } // x switch (bdResponse)
+                                } // x  if (bdResponse == null)
+                            }
+                            else // ! LETRAOK = FALSE
+                            {
+                                response.StatusCode = HttpStatusCode.BadRequest;
+                                response.Content = new StringContent("EL NUMERO DE DNI NO ES VÁLIDO, CONFIRME LOS 8 DIGITOS Y LA LETRA");
+                            } // x if (letraOk)
+                        }
+                        else // ! MRZCREATED = NULL
+                        {
+                            response.StatusCode = HttpStatusCode.BadRequest;
+                            response.Content = new StringContent("VUELVA A SUBIR LA FOTO DEL REVERSO DEL DNI ASEGURÁDOSE DE LA CLARIDAD DE LAS LETRAS"); ;
+                        } // x if (mrzCreated != null)                    
+                    } // x if (ocrFound.IsNullOrWhiteSpace() || ocrFound == "")
+                }
+                catch (Exception e)
+                {
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Content = new StringContent(e.Message);
+                }
+            }
+            else // ! cambioPass = 0 NO SE HA REALIZADO EL CAMBIO DE PASS
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                response.Content = new StringContent("NO SE HA REALIZADO EL CAMBIO DE CONTRASEÑA PORQUE cambioPass = 0");
+                return response;
+            }
+            // File.Delete(dniFilePath); // ! DELETE IMAGEN REVERSO DNI
+            //string auxxx = response.Content + "//"+ new StringContent(varNewPass);
+            //response.Content = new StringContent(varNewPass);
+            return response;
+        }
+
+
+        // ! PROCESO PARA EL RESETEO DE CONTRASEÑA Y GENERACION DE UNA NUEVA
+        [HttpPost]
+        public HttpResponseMessage cambioPassBD([FromBody] FormularioPassModel entradaDNI, string cambioPass)
+        {
+            // ! BYTES REVERSO PARA EL OCR
+            byte[] imageBytes = entradaDNI.arrayBytesDni;
+
+            string dniSolicitante = entradaDNI.nDniSolicitante;
+            string varNewPass = "";
+            
+            string ocrFound;
+            MrzModelo mrzCreated = new MrzModelo();
+            bool mrzIsOk = false;
+            var reseteoPassword = new reseteoPassword();
+
+            // SI NO CAMBIAMOS EL TIPO DE STATUS, SE INICIALIZA CON STATUS 200
+            // POSIBLEMENTE POR ESO SIEMPRE RECIBIAMOS UN STATUS 200 AUN SIN CONECTAR LA BASE DE DATOS
+            HttpResponseMessage response = new HttpResponseMessage();
+            // CAMBIAMOS LO PRIMERO EL ESTADO PARA QUE SI SIGUE EN UNAUTHORIZED ES QUE NO SE HA HECHO NADA
+            response.StatusCode = HttpStatusCode.Unauthorized;
+
+            if (cambioPass == "1")
+            {
+                Logger.Instance.Log("Cambio de contraseña autorizado");
+                try
+                {
+                    if (imageBytes != null)
+                    {
+                        MemoryStream memoryStream = new MemoryStream(imageBytes);  
+                    }
+                    
+                    // ! EN DESUSO, PARA EL OCR
+                    // x var makeOCR = new makeOCR();
+                    // x ocrFound = makeOCR.getOCR(imageBytes, memoryStream);
+                    // ! CONCATENACIÓN CON UN CARACTER QUE SABEMOS QUE NO SE ENCUENTRA EN EL OCR PARA PODER SEPARAR LUEGO EL STRING
+                    ocrFound = entradaDNI.Linea1Mrz + "*" + entradaDNI.Linea2Mrz;
+                    if (ocrFound.IsNullOrWhiteSpace() || ocrFound.IsEmpty())
+                    {
+                        Logger.Instance.Log("OCR NO ENCONTRADO");
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                        response.Content = new StringContent("ERROR AL REALIZAR EL OCR DE LA IMAGEN DEL DNI");
+                    }
+                    else // ! OCRFOUND EXISTS
+                    {
+                        var mrzDetector = new mrzDetector();
+
+                        //mrzCreated = mrzDetector.getMrzAndVerify(ocrFound);
+                        // ! SE VERIFICAN TODOS LOS DATOS DEL MRZ CON SUS DIGITOS DE CONTROL Y LA LETRA DEL DNI
+                        Logger.Instance.Log("Inicio Obtención de MRZ y verificación");
+                        mrzIsOk = mrzDetector.getMrzAndVerify(ocrFound);
+
+                        // ! CON ESTO NO CONFIRMAMOS LA IDENTIDAD DE LA PERSONA SOLO LA VALIDEZ DE LOS DATOS DEL DNI INTRODUCIDO
+                        // ? NO SERÍA NECESARIO HACER MAS COMPROBACIONES?? EN ESE CASO SERIA IMPERSONACIÓN
+                        if (mrzIsOk)
+                        {
+                            Logger.Instance.Log("MRZ correcto y verificado");
+                            // ! GENERAMOS LA CONTRASEÑA NUEVA
+                            varNewPass = reseteoPassword.genPass();
+                            Logger.Instance.Log("Contraseña nueva creada");
+                            // ASIGNAMOS LOS DATOS OBTENIDOS A LOS PARAMETROS NECESARIOS PARA INICIAR EL PROCESO DE LA BBDD
+                            string p_dni = entradaDNI.nDniSolicitante;
+                            string p_mailUned = entradaDNI.emailUnedSolicitante;
+                            string p_mailExt = entradaDNI.emailPersSolicitante;
+                            string p_pass = varNewPass;
+
+                            // ! LLAMAMOS AL PROCEDIMIENTO ALMACENADO QUE REALIZA EL CAMBIO DE PASS
+                            Logger.Instance.Log("Datos asignados a los parametros para la llamada a la bbdd");
+                            Logger.Instance.Log("Llamada al procedimiento alamcenado de la Base de Datos");
+                            var bdResponse = dbConnect.callProc_CAU_CPASS(p_dni, p_mailUned, p_pass, p_mailExt);
+
+                          
+                            Logger.Instance.Log("BdResponse: " + bdResponse);
+
+                            if (bdResponse == null)
+                            {
+                                response.StatusCode = HttpStatusCode.BadRequest;
+                                response.Content = new StringContent("NO HA HABIDO RESPUESTA POR PARTE DE LA BBDD");
+                                // DEBUG EN PRODUCCION
+                                entradaDNI.errorCallCambioPassBD = bdResponse;
+                            }
+                            else
+                            {
+                                switch (bdResponse.ToString())
+                                {
+                                    case "0":
+                                        
+                                        response.StatusCode = HttpStatusCode.OK;
+                                        response.Content = new StringContent("CORREO COINCIDE Y LA CONTRASEÑA HA SIDO CAMBIADA");
+                                        Logger.Instance.Log("Procedimiento almacenado ejecutado correctamente");
+                                        // DEBUG EN PRODUCCIÓN
+                                        entradaDNI.errorCallCambioPassBD = bdResponse;
+                                        return response;
+                                        //break;
+                                    case "1":
+                                        response.StatusCode = HttpStatusCode.NotFound;
+                                        response.Content = new StringContent("LA CUENTA NO ES INVI NI COL");
+                                        Logger.Instance.Log("La cuenta no pertenece a un INVI o COL");
+                                        // DEBUG EN PRODUCCION
+                                        entradaDNI.errorCallCambioPassBD = bdResponse;
+                                        break;
+                                    case "2":
+                                        response.StatusCode = HttpStatusCode.InternalServerError;
+                                        // response.Content = new StringContent("ERROR SIN ESPECIFICAR");
+                                        response.Content = new StringContent(bdResponse.ToString());
+                                        Logger.Instance.Log("Error interno de servidor al procesar la petición");
+                                        // DEBUG EN PRODUCCION
+                                        entradaDNI.errorCallCambioPassBD = bdResponse;
+                                        break;
+                                    case "3":
+                                        response.StatusCode = HttpStatusCode.NotFound;
+                                        response.Content = new StringContent("EL MAIL NO CORRESPONDE AL MAIL DE LA BBDD PARA ESE DNI");
+                                        Logger.Instance.Log("El mail no corresponde al mail asociado en la base de datos");
+                                        // DEBUG EN PRODUCCION
+                                        entradaDNI.errorCallCambioPassBD = bdResponse;
+                                        break;
+                                    case "4":
+                                        response.StatusCode = HttpStatusCode.NoContent;
+                                        response.Content = new StringContent("NO HAY DATOS PARA ESE DNI");
+                                        Logger.Instance.Log("No hay datos en la base de datos asociados a ese DNI");
+                                        // DEBUG EN PRODUCCION
+                                        entradaDNI.errorCallCambioPassBD = bdResponse;
+                                        break;                                        
+                                } // x switch (bdResponse)
+                            } // x  if (bdResponse == null)                            
+                        }
+                        else // ! MRZCREATED = NULL
+                        {
+                            response.StatusCode = HttpStatusCode.BadRequest;
+                            response.Content = new StringContent("VUELVA A REESCRIBIR LAS LINEAS MRZ DEL DNI ASEGURÁNDOSE DE QUE ESTÁN " +
+                                "TODOS LOS CARACTERES ESCRITOS CORRECTAMENTE");
+                            Logger.Instance.Log("MRZ incorrecto o nulo");
+                            // DEBUG EN PRODUCCION
+                            entradaDNI.errorCallCambioPassBD = mrzIsOk.ToString();
+                        } // x if (mrzCreated != null)                    
+                    } // x if (ocrFound.IsNullOrWhiteSpace() || ocrFound == "")
+                }
+                catch (Exception e)
+                {
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Content = new StringContent(e.Message);
+                    Logger.Instance.Log("Error: \n" + e);
+                }                
+            }
+            else // ! cambioPass = 0 NO SE HA REALIZADO EL CAMBIO DE PASS
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                response.Content = new StringContent("NO SE HA REALIZADO EL CAMBIO DE CONTRASEÑA PORQUE cambioPass = 0");
+                Logger.Instance.Log("No se ha autorizado el cambio de contraseña en base de datos");
+                return response;
+                
+            }
+            // File.Delete(dniFilePath); // ! DELETE IMAGEN REVERSO DNI
+            //string auxxx = response.Content + "//"+ new StringContent(varNewPass);
+            //response.Content = new StringContent(varNewPass);
+            return response;
+        }
+
+        // ! GET api/values?emailPrueba=ok
+        // ! PROCESO PARA EL CAMBIO DE CORREO ELECTRONICO AL QUE NO TIENE ACCESO YA
+        // ? RESPONSE.CONTENT = VARIABLENEWEMAIL
+        [HttpPost]
+        public HttpResponseMessage cambioEmailBD([FromBody] MiModelo2 entradaDNI, string cambioEmail)
+        {
+            byte[] imageBytes = entradaDNI.bytesDNI;
+            string dniSolicitante = entradaDNI.dniSolicitante;
+            string varNewPass = "";
+            string ocrFound;
+            //byte[] imageBytes = Convert.FromBase64String(base64string);
+            MrzModelo mrzCreated = new MrzModelo();
+            bool mrzIsOk = false;
+            var reseteoPassword = new reseteoPassword();
+            HttpResponseMessage response = new HttpResponseMessage();
+
+            if (cambioEmail == "1")
+            {
+                try
+                {
+                    //File.WriteAllBytes(dniFilePath, imageBytes);    // ! ALMACENAMOS LA IMAGEN EN LA CARPETA TEMPORAL PARA PODER ACCEDER A SU RUTA Y HACER EL PROCESO DE OCR
+                    MemoryStream memoryStream = new MemoryStream(imageBytes);
+                    var makeOCR = new MakeOCR();
+                    ocrFound = makeOCR.getOCR(imageBytes, memoryStream);
+                    // ! -------------------------------------------------------------------------------
+                    //byte[] bytesImage = File.ReadAllBytes("image.jpg");
+                    //string path = "/tempfiles/img.jpg";
+                    //Stream streamOut = new FileStream(path, FileMode.Create);
+
+                    //streamOut.Write(imageBytes, 0, imageBytes.Length);
+
+                    //streamOut.Close();
+                    // ! -----------------------------------------------------------------------------
+                    if (ocrFound.IsNullOrWhiteSpace() || ocrFound.IsEmpty())
+                    {
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                        response.Content = new StringContent("ERROR AL REALIZAR EL OCR DE LA IMAGEN DEL DNI");
+                    }
+                    else // ! OCRFOUND EXISTS
+                    {
+                        var mrzDetector = new mrzDetector();
+                        //mrzCreated = mrzDetector.getMrzAndVerify(ocrFound);
+                        mrzIsOk = mrzDetector.getMrzAndVerify(ocrFound);                  
+                            
+                            if (mrzIsOk) // ! CONFIRMAMOS QUE EL NIF ES CORRECTO MEDIANTE EL CONTROL DE LA LETRA DEL NIF
+                            {
+                                varNewPass = reseteoPassword.genPass();
+
+                                // ! MINI FORMATEO DEL NUMERO DEL DNI 
+                                string pruebaa = mrzCreated.numeroDni;
+                                pruebaa = pruebaa.Trim();
+                                //Regex regex1 = new Regex(@"\d{8}+\D");      // ! 12345678X
+                                //Regex regex2 = new Regex(@"\d{8}+\s+\D");   // ! 12345678 X
+                                //Regex regex3 = new Regex(@"\d{8}+'-'+\D");   // ! 12345678-X
+                                //AppDomain.CurrentDomain.SetData("REGEX_DEFAULT_MATCH_TIMEOUT", TimeSpan.FromMilliseconds(100)); // process-wide setting
+
+                                //var m = regex1.Match(pruebaa);
+                                //var mm = regex2.Match(pruebaa);
+                                // ! QUIERO EVITAR ESTOS FORMATOS 00000000X || 00000000 X Y FORMATEARLO A 00000000-X
+                                //if (pruebaa != null || m.Success || mm.Success) 
+                                
+
+                                    string numAux = entradaDNI.dniSolicitante.Substring(0, Math.Min(entradaDNI.dniSolicitante.Length, 8));
+                                    string letraAux = entradaDNI.dniSolicitante.Substring(8);
+                                    entradaDNI.dniSolicitante = numAux + "-" + letraAux;                        
+                                    entradaDNI.dniSolicitante = mrzCreated.numeroDni.ToString();                               
+                                
+                                    string p_dni = entradaDNI.dniSolicitante;
+                            //  TODO BUSCAR UN PROCEDIMIENTO ALMACENADO QUE ME PROPORCIONE EL ID DEL USUARIO
+                            //string p_idemail = entradaDNI.idUnedSolicitante;
+                                    string p_mailUned = entradaDNI.emailSolicitante;
+                                    string p_mailExt = entradaDNI.emailRecupSolicitante;
+                                    string p_pass = varNewPass;
+                                //var bdResponse = dbConnect.callProc_CAU_CPASS(p_dni, p_mail, p_pass, p_idemail);
+                                var bdResponse = dbConnect.callProc_CAU_CPASS(p_dni, p_mailUned, p_pass, p_mailExt);
+                                
+                                if (bdResponse == null)
+                                {
+                                    response.StatusCode = HttpStatusCode.BadRequest;
+                                    response.Content = new StringContent("NO HA HABIDO RESPUESTA POR PARTE DE LA BBDD");
+                                }
+                                else
+                                {
+                                    switch (bdResponse)
+                                    {
+                                        case "0":
+                                            response.StatusCode = HttpStatusCode.OK;
+                                            response.Content = new StringContent("CORREO COINCIDE Y LA CONTRASEÑA HA SIDO CAMBIADA");
+                                            break;
+                                        case "1":
+                                            response.StatusCode = HttpStatusCode.NotFound;
+                                            response.Content = new StringContent("LA CUENTA NO ES INVI NI COL");
+                                            break;
+                                        case "2":
+                                            response.StatusCode = HttpStatusCode.InternalServerError;
+                                            response.Content = new StringContent("ERROR SIN ESPECIFICAR");
+                                            break;
+                                        case "3":
+                                            response.StatusCode = HttpStatusCode.NotFound;
+                                            response.Content = new StringContent("EL MAIL NO CORRESPONDE AL MAIL DE LA BBDD PARA ESE DNI");
+                                            break;
+                                        case "4":
+                                            response.StatusCode = HttpStatusCode.NoContent;
+                                            response.Content = new StringContent("NO HAY DATOS PARA ESE DNI");
+                                            break;
+                                    } // x switch (bdResponse)
+                                } // x  if (bdResponse == null)
+                            }
+                            else // ! LETRAOK = FALSE
+                            {
+                                response.StatusCode = HttpStatusCode.BadRequest;
+                                response.Content = new StringContent("EL NUMERO DE DNI NO ES VÁLIDO, CONFIRME LOS 8 DIGITOS Y LA LETRA");
+                            } // x if (letraOk)                             
+                    } // x if (ocrFound.IsNullOrWhiteSpace() || ocrFound == "")
+                }
+                catch (Exception e)
+                {
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.Content = new StringContent(e.Message);
+                }
+            }
+            else // ! cambioPass = 0 NO SE HA REALIZADO EL CAMBIO DE PASS
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                response.Content = new StringContent("NO SE HA REALIZADO EL CAMBIO DE CONTRASEÑA PORQUE cambioPass = 0");
+                return response;
+            }
+            // File.Delete(dniFilePath); // ! DELETE IMAGEN REVERSO DNI
+            string auxxx = response.Content + "//" + new StringContent(varNewPass);
+            response.Content = new StringContent(auxxx);
+            return response;
+
+
+        }
+
+        // ! GET api/values?idApp=146&pClave=valor
+        // ! CONSULTA A LA BASE DE DATOS 
+        //  ? RESPONSE.CONTENT = RESPBD 
+        [HttpGet]
+        public HttpResponseMessage ConsultaBD(string idApp, string pClave)
+        {
+            string resBDstr = null;
+            try
+            {
+                string respBD = dbConnect.AccesoWS(idApp, pClave);
+
+                //Creación respuestas 201 con contenido IdPeticions
+                resBDstr = respBD.ToString();
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            string responseContent = resBDstr;
+
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.Found);
+            response.Content = new StringContent(responseContent);
+            return response;
+        }
+
+        // ! POST api/values
+        // ! SUBIDA UN ARCHIVO PDF AL WS PORTAFIRMAS PARA SU FIRMA
+        // ? RESPONSE.CONTENT = IDSOLICITUD
+        [HttpPost]
+        public HttpResponseMessage PostPdf([FromBody] models.MiModelo entradaPost)
+        {
+
+            string IdPeticion = "";
+            string PortafirmasCreateDetalle = "";
+
+            // !  Try conexión portafirmas
+            try
+            {
+                //  ! Creación objeto portafirmas
+                Portafirmas.Portafirmas_SEC_Client MiPortafirmas = new Portafirmas.Portafirmas_SEC_Client();
+
+                // ! ASIGNACION DEL ENTORNO EN FUNCION DEL ENDPOINT.ADDRESS QUE ATAQUE EL CLIENTE/USUARIO
+                MiPortafirmas.Endpoint.Address = new EndpointAddress(Config.FirmaEndPoint);
+
+                //  ! Creación certificado portafirmas
+                MiPortafirmas.ClientCredentials.ClientCertificate.Certificate = new X509Certificate2(System.Web.HttpContext.Current.Server.MapPath("~/pruebapfx/146_pfx.pfx"), "", X509KeyStorageFlags.DefaultKeySet);
+
+                //  ! Creaión Respuesta portafirmas
+                Portafirmas.Portafirmas_Modify_DTO respuesta = new Portafirmas.Portafirmas_Modify_DTO();
+
+                // ! Array Firmantes portafirmas
+                string[] MisFirmantes = { entradaPost.Firmante };
+
+                Portafirmas.document[] MisDocumentos = new Portafirmas.document[1];
+
+                // ! Documento a firmar                              
+                byte[] pdfBytes = entradaPost.bytesPDF;
+
+                string ficheroBase64 = Convert.ToBase64String(pdfBytes);
+
+                MisDocumentos[0] = new Portafirmas.document
+                {
+                    name = entradaPost.nombrePDF,
+                    b64 = ficheroBase64
+                };
+                //! Tipo de firma (PARALELA O CASCADA)            
+                Portafirmas.tipoFirma MiTipoFirma = Portafirmas.tipoFirma.Paralela;
+                //! Asignación de respuesta de la firma                
+                respuesta = MiPortafirmas.createRequest("Subject", "Text", "Reference", MiTipoFirma, MisFirmantes, MisDocumentos);
+                //!  ID Petición de firma
+                //IdPeticion = respuesta.createdRequestId.ToString();
+                IdPeticion = respuesta.createdRequestId.ToString();
+                //! Cierre portafirmas
+                MiPortafirmas.Close();
+            }
+            // ! Control de Errores
+            // ! El orden de capturas de excepciones debe ser (según Microsoft): TimeException, FaultExcepction<T>, FaultException, CommunictionException, Exception
+            // ! Mediante FaultException<T> (Fuertemente tipado) en un bloque Try-Catch
+            catch (FaultException<Portafirmas.ErroresEadmon> miFexPortafirmas)
+            {
+                PortafirmasCreateDetalle +=
+                 ("<p style='color:red'>ERROR: </p>"
+                 + " <p>-------- MENSAJE: " + miFexPortafirmas.Reason.ToString() + "</p>"
+                 + " <p>-------- CODIGO: " + miFexPortafirmas.Code.Name.ToString() + "</p>"
+                 + " <p>-------- MENSAJE DETALLE : " + miFexPortafirmas.Detail.Mensaje.ToString()
+                 + "</p>"
+                 + " <p>-------- CODIGO DETALLE : " + miFexPortafirmas.Detail.Codigo.ToString() +
+                 "</p>"
+                 );
+            }
+            //Creación respuestas 201 con contenido IdPeticions
+            string responseContent = IdPeticion;
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.Created);
+            response.Content = new StringContent(responseContent);
+            return response;
+        }
+
+        // ! GET api/values/idDocumento
+        // ! OBTENCIÓN DEL ESTADO DE FIRMA DE UNA PETICIÓN ANTERIOR
+        // ? RESPONSE.CONTENT = ESTADOFIRMA
+        [HttpGet]
+        public HttpResponseMessage GetFirmaStatus(string id)
+        {
+
+            string PortafirmasStateDetalle = "";
+            string EstadoPeticion = "";
+
+            // Try conexión portafirmas
+            try
+            {
+                Portafirmas.Portafirmas_SEC_Client MiPortafirmas = new Portafirmas.Portafirmas_SEC_Client();
+
+                // ! ASIGNACION DEL ENTORNO EN FUNCION DEL ENDPOINT.ADDRESS QUE ATAQUE EL CLIENTE/USUARIO
+                MiPortafirmas.Endpoint.Address = new EndpointAddress(Config.FirmaEndPoint);
+
+                MiPortafirmas.ClientCredentials.ClientCertificate.Certificate = new X509Certificate2(System.Web.HttpContext.Current.Server.MapPath("~/pruebapfx/146_pfx.pfx"), "", X509KeyStorageFlags.DefaultKeySet);
+
+                Portafirmas.Portafirmas_Query_DTO respuesta = new Portafirmas.Portafirmas_Query_DTO();
+
+                respuesta = MiPortafirmas.requestState(id);
+
+                EstadoPeticion = respuesta.requestStatus.ToString();
+            }
+
+            //Control de Errores
+            //El orden de capturas de excepciones debe ser (según Microsoft): TimeException, FaultExcepction<T>, FaultException, CommunictionException, Exception
+            //Mediante FaultException<T> (Fuertemente tipado) en un bloque Try-Catch
+
+            catch (FaultException<Portafirmas.ErroresEadmon> miFexPortafirmas)
+            {
+                PortafirmasStateDetalle +=
+                 ("<p style='color:red'>ERROR: </p>"
+                 + " <p>-------- MENSAJE: " + miFexPortafirmas.Reason.ToString() + "</p>"
+                 + " <p>-------- CODIGO: " + miFexPortafirmas.Code.Name.ToString() + "</p>"
+                 + " <p>-------- MENSAJE DETALLE : " + miFexPortafirmas.Detail.Mensaje.ToString()
+                 + "</p>"
+                 + " <p>-------- CODIGO DETALLE : " + miFexPortafirmas.Detail.Codigo.ToString() +
+                 "</p>"
+                 );
+            }
+            //Respuesta para mostrar en pantalla:
+            // Detalle.Text = "Portafirmas. RequestState. " + PortafirmasStateDetalle.Replace(Environment.NewLine, "<br />");
+
+            //Creación respuestas 201 con contenido Estado peticion
+            string responseContent = EstadoPeticion;
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StringContent(responseContent);
+            return response;
+        }
+
+        // !  GET api/values?requestId=valor&prueba=valor&prueba2=valor
+        // ! OBTENCIÓN DEL IDENTIFICADDOR DEL DOCUMENTO FIRMADO EN FUNCION DE LA PETICION
+        // ? RESPONSE.CONTENT = ID DOCUMENTO
+        // TODO RESPONDER CON UN ARRAY DE LOS IDENTIFICADORES EN VEZ DE EL ELEMENTO [0]
+        [HttpGet]
+        public HttpResponseMessage GetDocList(string requestId, string prueba, string prueba2)
+        {
+            string PortafirmasDocListDetalle = "";
+            string idDocumento = "";
+
+            try
+            {
+                Portafirmas.Portafirmas_SEC_Client MiPortafirmas = new Portafirmas.Portafirmas_SEC_Client();
+                // ! ASIGNACION DEL ENTORNO EN FUNCION DEL ENDPOINT.ADDRESS QUE ATAQUE EL CLIENTE/USUARIO
+                MiPortafirmas.Endpoint.Address = new EndpointAddress(Config.FirmaEndPoint);
+
+                MiPortafirmas.ClientCredentials.ClientCertificate.Certificate = new X509Certificate2(System.Web.HttpContext.Current.Server.MapPath("~/pruebapfx/146_pfx.pfx"), "", X509KeyStorageFlags.DefaultKeySet);
+                Portafirmas.Portafirmas_Query_DTO respuesta = new Portafirmas.Portafirmas_Query_DTO();
+
+
+                respuesta = MiPortafirmas.docList(requestId);
+
+                // idDocumento = respuesta.documentList.ToString();
+
+                for (int n_docs = 0; n_docs < respuesta.documentList.Length; n_docs++)
+                {
+                    PortafirmasDocListDetalle += "<b>Documento: " + n_docs.ToString() + "</b><br />"; ;
+                    PortafirmasDocListDetalle += "Identificador:" + respuesta.documentList[n_docs].document.identifier.ToString() + "<br />";
+                    PortafirmasDocListDetalle += "Nombre:" + respuesta.documentList[n_docs].document.name.ToString() + "<br />";
+                    PortafirmasDocListDetalle += "Firma:" + respuesta.documentList[n_docs].document.sign.ToString() + "<br />";
+                    PortafirmasDocListDetalle += "Mime:" + respuesta.documentList[n_docs].document.mime.ToString() + "<br />";
+                }
+
+                idDocumento = respuesta.documentList[0].document.identifier.ToString();
+
+            }
+            catch (FaultException<Portafirmas.ErroresEadmon> miFexPortafirmas)
+            {
+                PortafirmasDocListDetalle +=
+                    ("<p style='color:red'>ERROR: </p>"
+                    + " <p>-------- MENSAJE: " + miFexPortafirmas.Reason.ToString() + "</p>"
+                    + " <p>-------- CODIGO: " + miFexPortafirmas.Code.Name.ToString() + "</p>"
+                    + " <p>-------- MENSAJE DETALLE : " + miFexPortafirmas.Detail.Mensaje.ToString() + "</p>"
+                    + " <p>-------- CODIGO DETALLE : " + miFexPortafirmas.Detail.Codigo.ToString() + "</p>"
+                    );
+            }
+
+            string responseContent = idDocumento;
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StringContent(responseContent);
+            return response;
+        }
+
+        // ! GET api/values?documentId=valor&documentStatus=valor
+        // ! DESCARGA DE UN DOCUMENTO FIRMADO
+        // ? RESPONSE.CONTENT = PDF CONTENT BYTES        
+        [HttpGet]
+        public HttpResponseMessage GetSignedDoc(string documentId, string documentStatus)
+        {
+            // ! INICIALIZACION DE VARIABLES  QUE QUEREMOS QUE PERSISTAN FUERA DEL BLOQUE TRY-CATCH
+            string PortafirmasDownloadSignDocumentDetalle = "";
+            string documentoB64 = "";
+            //
+            MemoryStream stream = null;
+
+            try
+            {
+                // ! CREACION OBJETO PORTAFIRMAS
+                Portafirmas.Portafirmas_SEC_Client MiPortafirmas = new Portafirmas.Portafirmas_SEC_Client();
+
+                // ! ASIGNACION DEL ENTORNO EN FUNCION DEL ENDPOINT.ADDRESS QUE ATAQUE EL CLIENTE/USUARIO
+                MiPortafirmas.Endpoint.Address = new EndpointAddress(Config.FirmaEndPoint);
+
+                // ! ASIGNACION DEL CERTIFICADO DE LA APLICACION
+                MiPortafirmas.ClientCredentials.ClientCertificate.Certificate = new X509Certificate2(System.Web.HttpContext.Current.Server.MapPath("~/pruebapfx/146_pfx.pfx"), "", X509KeyStorageFlags.DefaultKeySet);
+
+                // ! INICIALIZACION DE LA RESPUESTA
+                Portafirmas.document respuesta = new Portafirmas.document();
+
+                // ! ASIGNACION DE LA RESPUESTA A LA DEVOLUCION DEL METODO DEL PORTAFIRMAS downloadSignDocument()
+                respuesta = MiPortafirmas.downloadSignDocument(documentId);
+
+                // ! ASIGNACION DE LOS CONTENTBYTES DEL DOCUMENTO FIRMADO A UNA VARIABLE
+                documentoB64 = respuesta.b64.ToString();
+
+
+                ///////////
+
+                byte[] pdfBytes = Convert.FromBase64String(documentoB64);
+
+                //File.WriteAllBytes("archivo.pdf", pdfBytes);
+
+                stream = new MemoryStream(pdfBytes);
+
+            }
+
+            // Control de Errores
+            // El orden de capturas de excepciones debe ser (según Microsoft): TimeException, FaultExcepction<T>, FaultException, CommunictionException, Exception
+            // Mediante FaultException<T> (Fuertemente tipado) en un bloque Try-Catch
+            catch (FaultException<Portafirmas.ErroresEadmon> miFexPortafirmas)
+            {
+                PortafirmasDownloadSignDocumentDetalle +=
+                    ("<p style='color:red'>ERROR: </p>"
+                    + " <p>-------- MENSAJE: " + miFexPortafirmas.Reason.ToString() + "</p>"
+                    + " <p>-------- CODIGO: " + miFexPortafirmas.Code.Name.ToString() + "</p>"
+                    + " <p>-------- MENSAJE DETALLE : " + miFexPortafirmas.Detail.Mensaje.ToString() + "</p>"
+                    + " <p>-------- CODIGO DETALLE : " + miFexPortafirmas.Detail.Codigo.ToString() + "</p>"
+                    );
+            }
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StreamContent(stream);
+            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+            {
+                FileName = "solicitud_ComisionServicios_ACEPTADA.pdf"
+            };
+
+            return response;
+
+            /*
+
+            // ! CONFIGURACION DE LA RESPUESTA HTTP QUE DEVUELVE EL EL DOCUMENTO FIRMADO
+            string responseContent = documentoB64;
+            // ! CONFIGURACION DEL STATUS CODE DE LA RESPUESTA (200)
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            // ! ASIGNACION DEL CONTENIDO DE LA RESPUESTA
+            response.Content = new StringContent(responseContent);
+            // ! DEVOLUCION DE LA RESPUESTA AL CLIENTE
+            return response;
+            */
+
+        }
+
+        // ! GET api/values?documentId=valor&numero=5
+        // ! DESCARGA DE UN DOCUMENTO SIN FIRMAR
+        // ? RESPONSE.CONTENT = PDF CONTENT BYTES
+        [HttpGet]
+        public HttpResponseMessage GetDocument(string documentId, int numero)
+        {
+            string PortafirmasDownloadDocumentDetalle = "";
+            string documentoB64 = "";
+            try
+            {
+                Portafirmas.Portafirmas_SEC_Client MiPortafirmas = new Portafirmas.Portafirmas_SEC_Client();
+                // ! ASIGNACION DEL ENTORNO EN FUNCION DEL ENDPOINT.ADDRESS QUE ATAQUE EL CLIENTE/USUARIO
+                MiPortafirmas.Endpoint.Address = new EndpointAddress(Config.FirmaEndPoint);
+                MiPortafirmas.ClientCredentials.ClientCertificate.Certificate = new X509Certificate2(System.Web.HttpContext.Current.Server.MapPath("~/pruebapfx/146_pfx.pfx"), "", X509KeyStorageFlags.DefaultKeySet);
+
+                Portafirmas.document respuesta = new Portafirmas.document();
+                respuesta = MiPortafirmas.downloadDocument(documentId);
+                documentoB64 = respuesta.b64.ToString();
+            }
+            catch (FaultException<Portafirmas.ErroresEadmon> miFexPortafirmas)
+            {
+                PortafirmasDownloadDocumentDetalle +=
+                    ("<p style='color:red'>ERROR: </p>"
+                    + " <p>-------- MENSAJE: " + miFexPortafirmas.Reason.ToString() + "</p>"
+                    + " <p>-------- CODIGO: " + miFexPortafirmas.Code.Name.ToString() + "</p>"
+                    + " <p>-------- MENSAJE DETALLE : " + miFexPortafirmas.Detail.Mensaje.ToString() + "</p>"
+                    + " <p>-------- CODIGO DETALLE : " + miFexPortafirmas.Detail.Codigo.ToString() + "</p>"
+                    );
+            }
+
+            string responseContent = documentoB64;
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StringContent(responseContent);
+            return response;
+
+        }
+
+        // ! -----------------------------------------------------------------------------------------------------------------
+        // ?  ----------------------------------------------------------------------------------------------------------------
+        // ! A PRIORI NO HAY MÉTODOS PARA MODIFICAR O BORRAR UNA PETICIÓN DEL PORTAFIRMAS
+
+        // X PUT api/values/5
+        [HttpPut]
+        public void Put(int id, [FromBody] string value)
+        {
+
+        }
+
+        // X DELETE api/values/5
+        [HttpDelete]
+        public void Delete(int id)
+        {
+
+        }
+        // ! -----------------------------------------------------------------------------------------------------------------
+        // ?  ----------------------------------------------------------------------------------------------------------------
+
+    }
+
+}
+
+
+
+
+
+

@@ -1,0 +1,144 @@
+﻿@model APIRPA.models.FormularioPassModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    <!-- JQUERY DEBE IR PREVIAMENTE A BOOTSTRAP-->
+    <script src="~/Scripts/jquery-3.7.1.slim.min.js"></script>
+    <!-- BOOTSTRAP-->
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
+    <!-- -->
+    <link rel="stylesheet" href="~/Content/estilosUNED.css" />
+    <link rel="stylesheet" href="~/Content/Site.css" />
+
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+    @*<script src="~/Scripts/jquery-3.7.1.slim.min.js"></script>*@
+    @*<script src="/jquery-3.7.1.slim.min.js"></script>*@
+</head>
+<body>
+    <div align="center">
+        <header class="container" role="banner">
+            <div class="row page-header">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <a href="http://www.uned.es" title="Acceso a página Principal de la UNED">
+                        <img src="~/Images/UNEDlogo.png" class="img-responsive pull-left" alt="Logo Universidad Nacional a Distancia" width="160" height="80" />
+                    </a>
+                    <h1 class="text-center">Servicio de restauración de contraseña</h1>
+                </div>
+            </div>
+        </header>
+        
+        <div class="panel panel-default login ">
+            <div class="panel-body fondo-gris">                
+                <div class="row">
+
+                    @using (Html.BeginForm("FormPass", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                    {
+                        <div class="col-md-6">
+                            @Html.LabelFor(m => m.nombreCompletoSolicitante) <br />
+                            @Html.TextBoxFor(m => m.nombreCompletoSolicitante) <br />
+                            @Html.ValidationMessageFor(m => m.nombreCompletoSolicitante, "", new { @class = "error" })
+                            <br />
+                            <!--OCULTAR-->
+                            @*@Html.LabelFor(m => m.idUserUned) <br />
+        @Html.TextBoxFor(m => m.idUserUned) <br />
+        @Html.ValidationMessageFor(m => m.idUserUned, "", new { @class = "error" })
+        <br />*@
+                            @Html.LabelFor(m => m.nDniSolicitante) <br />
+                            @Html.TextBoxFor(m => m.nDniSolicitante, new { placeholder = "12345678-X" }) <br />
+                            @Html.ValidationMessageFor(m => m.nDniSolicitante, "", new { @class = "error" })
+                            <br />
+                            @Html.LabelFor(m => m.emailUnedSolicitante) <br />
+                            @Html.TextBoxFor(m => m.emailUnedSolicitante) <br />
+                            @Html.ValidationMessageFor(m => m.emailUnedSolicitante, "", new { @class = "error" })
+                            <br />
+                            @Html.LabelFor(m => m.emailPersSolicitante) <br />
+                            @Html.TextBoxFor(m => m.emailPersSolicitante) <br />
+                            @Html.ValidationMessageFor(m => m.emailPersSolicitante, "", new { @class = "error" })
+                            <br />
+                            <!-- NO REQUERIDO-->
+                            <!-- YA NO HACE FALTA, YA QUE SE REQUIERE ANTES Y AHORA SOLO QUEREMOS RENDERIZAR LOS DATOS OBTENIDOS POR EL OCR-->
+                            @*@Html.LabelFor(m => m.bytesReversoDni) <br />
+                            <span class="error">No se almacena su Documento Nacional de Identidad</span> <br />
+                            @Html.TextBoxFor(m => m.bytesReversoDni, new { type = "file" }) <br />
+                            @Html.ValidationMessageFor(m => m.bytesReversoDni, "", new { @class = "error" })*@
+                        </div>
+                        <br />                     
+
+                        <div class="col-md-6">
+                            <img src="~/Images/PLANTILLAS_MRZ_USER.png" class="img-responsive" alt="Plantilla MRZ Usuario" width="320" height="160" />
+                            <br />
+                            <span>POR FAVOR, REVISE ATENTAMENTE LOS DATOS OBTENIDOS MEDIANTE LA IMAGEN DE SU DNI, SI ALGÚN CARACTER ES ERRÓNEO NO PODREMOS VERIFICAR SU IDENTIDAD</span>
+                            <br />
+                            @Html.LabelFor(m => m.Linea1Mrz) <br />
+                            <span>La primera línea del MRZ debe tener <<<<<< (6 carácteres)</span>
+                            @Html.TextAreaFor(m => m.Linea1Mrz, new { placeholder = "IDESPCAA000000499999999R<<<<<<" }) <br />
+                            @Html.ValidationMessageFor(m => m.Linea1Mrz, "", new { @class = "error" })
+                            <br />
+                            @Html.LabelFor(m => m.Linea2Mrz) <br />
+                            <span>La primera línea del MRZ debe tener <<<<<< (11 carácteres)</span>
+                            @Html.TextAreaFor(m => m.Linea2Mrz, new { placeholder = "8001014F3106028ESP<<<<<<<<<<<1" }) <br />
+                            @Html.ValidationMessageFor(m => m.Linea2Mrz, "", new { @class = "error" })
+                        </div>                        
+                        <br />
+                        <div>
+                            @Html.TextAreaFor(m => m.errorOCR)
+                        </div>
+                        <div>
+                            @Html.TextAreaFor(m => m.errorCallCambioPassBD)
+                        </div>
+                        <br />
+
+                        <div class="hidden-xs">
+                            <input type="submit" name="enviar" value="ENVIAR" class="btn btn-default btn-primary" />
+                        </div>
+                        <div class="visible-xs">
+                            <input type="submit" name="enviar" value="ENVIAR" class="btn btn-default btn-primary btn-block" />
+                        </div>
+                    }
+                </div>
+
+                @*<form action="./Form" method="post" enctype="multipart/form-data">
+
+                    <div class="hidden-xs">
+                        <input type="submit" name="enviar" value="ENVIAR" class="btn btn-default btn-primary" />
+                    </div>
+                    <div class="visible-xs">
+                        <input type="submit" name="enviar" value="ENVIAR" class="btn btn-default btn-primary btn-block" />
+                    </div>
+                </form>*@
+            </div>
+        </div>
+    </div>
+
+    <footer class="container" role="navigation">
+        <div id="panel_pie">
+            <div class="row">
+                <ul class="list-inline text-center">
+                    <li><a href="http://www.uned.es" title="UNED">www.uned.es</a></li>
+                    <!--<li><a href="http://portal.uned.es/portal/page?_pageid=93,176653&_dad=portal&_schema=PORTAL" title="UNED">Mapa Web</a></li>-->
+                    <li><a href="https://www.uned.es/universidad/inicio/accesibilidad.html" title="UNED">Accesibilidad</a></li>
+                    <li><a href="http://portal.uned.es/pls/portal/url/page/UNED_MAIN/LAUNIVERSIDAD" title="Tu Universidad">Tu Universidad</a></li>
+                    <li><a href="http://portal.uned.es/portal/page?_pageid=93,171871&amp;_dad=portal&amp;_schema=PORTAL" title="Estudiar en la UNED">Estudiar en la UNED</a></li>
+                    <li><a href="http://portal.uned.es/portal/page?_pageid=93,461455&amp;_dad=portal&amp;_schema=PORTAL" title="Investigación">Investigación</a></li>
+                    <li><a href="http://portal.uned.es/portal/page?_pageid=93,176841&amp;_dad=portal&amp;_schema=PORTAL" title="Medios y servicios">Medios y servicios</a></li>
+                    <li><a href="http://portal.uned.es/pls/portal/portal.home" title="Campus">Campus</a></li>
+                </ul>
+                <ul class="alert list-inline text-center">
+                    <li>Centro de Tecnología de la UNED - 1995 / 2023</li>
+                </ul>
+            </div>
+
+        </div>
+    </footer>
+</body>
+</html>
